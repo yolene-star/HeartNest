@@ -1,0 +1,4 @@
+[
+ {"id":"d1","kind":"diary","text":"上周去看了摄影展，喜欢安静地慢慢看作品。","recorded_at":"2026-10-25T18:00:00","emotion":{"label":"积极","confidence":0.85},"allow_retrieval":true},
+ {"id":"d2","kind":"chat","text":"最近有点无聊，想找一家不太吵的甜品店。","recorded_at":"2026-10-26T20:00:00","emotion":{"label":"低落","confidence":0.75},"allow_retrieval":true}
+]

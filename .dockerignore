@@ -1,0 +1,13 @@
+.git
+.deps
+.venv
+.npm-cache
+.pip-cache
+**/node_modules
+**/dist
+**/__pycache__
+**/.pytest_cache
+test-tmp*
+.env*
+data/runtime
+*.sqlite3*

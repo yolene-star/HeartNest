@@ -1,0 +1,146 @@
+{
+  "data_source": "人工编写的中文模拟文本，仅用于验证评估程序，不代表真实人群表现",
+  "train_size": 12,
+  "test_size": 12,
+  "split": "独立训练/测试文本；TF-IDF 仅在训练集拟合",
+  "results": [
+    {
+      "model": "LogisticRegression",
+      "accuracy": 0.5,
+      "macro_f1": 0.49285714285714277,
+      "labels": [
+        "积极",
+        "平稳",
+        "低落",
+        "焦虑"
+      ],
+      "confusion_matrix": [
+        [
+          2,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          2,
+          0,
+          1
+        ],
+        [
+          1,
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ]
+      ],
+      "error_cases": [
+        {
+          "text": "我按时吃饭上课",
+          "expected": "平稳",
+          "predicted": "焦虑"
+        },
+        {
+          "text": "心里像压了一块石头",
+          "expected": "低落",
+          "predicted": "平稳"
+        },
+        {
+          "text": "一想到明天就坐立不安",
+          "expected": "焦虑",
+          "predicted": "低落"
+        },
+        {
+          "text": "真棒，又被放鸽子了",
+          "expected": "低落",
+          "predicted": "平稳"
+        },
+        {
+          "text": "不开心，期待落空了",
+          "expected": "低落",
+          "predicted": "积极"
+        },
+        {
+          "text": "终于不用担心答辩了",
+          "expected": "积极",
+          "predicted": "焦虑"
+        }
+      ]
+    },
+    {
+      "model": "LinearSVC",
+      "accuracy": 0.5,
+      "macro_f1": 0.4928571428571428,
+      "labels": [
+        "积极",
+        "平稳",
+        "低落",
+        "焦虑"
+      ],
+      "confusion_matrix": [
+        [
+          2,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          2,
+          0,
+          1
+        ],
+        [
+          2,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          1
+        ]
+      ],
+      "error_cases": [
+        {
+          "text": "我按时吃饭上课",
+          "expected": "平稳",
+          "predicted": "焦虑"
+        },
+        {
+          "text": "心里像压了一块石头",
+          "expected": "低落",
+          "predicted": "平稳"
+        },
+        {
+          "text": "一想到明天就坐立不安",
+          "expected": "焦虑",
+          "predicted": "低落"
+        },
+        {
+          "text": "真棒，又被放鸽子了",
+          "expected": "低落",
+          "predicted": "积极"
+        },
+        {
+          "text": "不开心，期待落空了",
+          "expected": "低落",
+          "predicted": "积极"
+        },
+        {
+          "text": "终于不用担心答辩了",
+          "expected": "积极",
+          "predicted": "焦虑"
+        }
+      ]
+    }
+  ]
+}

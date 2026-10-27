@@ -1,0 +1,4 @@
+[
+ {"id":"p1","content":"摄影展","type":"喜欢","status":"active","source_id":"d1","confirmed":true},
+ {"id":"p2","content":"甜品店","type":"想尝试","status":"active","source_id":"d2","confirmed":true}
+]
