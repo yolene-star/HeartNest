@@ -4,6 +4,12 @@ import './styles.css'
 
 const API='/api'
 const EMOTIONS=['积极','平稳','低落','焦虑']
+const PETS=[
+  {id:'otter',name:'沐沐',kind:'小水獭',tag:'温柔倾听',intro:'我喜欢安静地听你说话，也会在你需要的时候陪你想办法。',className:'pet-otter'},
+  {id:'bear',name:'团团',kind:'小熊',tag:'朋友陪伴',intro:'我会像一个老朋友一样陪着你，也可以帮你把乱糟糟的事情理一理。',className:'pet-bear'},
+  {id:'cloud',name:'悠悠',kind:'小云朵',tag:'安静低刺激',intro:'你想说话时我会出现，不想说话时我也可以陪你安静一会儿。',className:'pet-cloud'},
+  {id:'lamp',name:'暖暖',kind:'小台灯',tag:'温柔整理',intro:'我会在你疲惫的时候陪你整理今天，帮你找到一个不会太困难的下一步。',className:'pet-lamp'},
+]
 async function request(path, options={}) {
   const r=await fetch(API+path,{headers:{'Content-Type':'application/json'},...options})
   if(!r.ok) throw new Error(await r.text())
@@ -11,6 +17,8 @@ async function request(path, options={}) {
 }
 
 function App(){
+  const [selectedPet,setSelectedPet]=useState(()=>{try{return JSON.parse(localStorage.getItem('heart-pet'))||null}catch{return null}})
+  const [showPetPicker,setShowPetPicker]=useState(!selectedPet)
   const [page,setPage]=useState('today')
   const [diaries,setDiaries]=useState([]); const [profiles,setProfiles]=useState([])
   const [settings,setSettings]=useState({memory_enabled:true}); const [message,setMessage]=useState('')
@@ -30,7 +38,10 @@ function App(){
   const feedback=(id,action)=>run(async()=>{await request('/feedback',{method:'POST',body:JSON.stringify({recommendation_id:id,action})});await refresh()},action==='reject'?'会减少相似建议':'已记录这次选择')
   const today=useMemo(()=>diaries.slice(0,3),[diaries]); const latest=diaries[0]
   const nav=[['today','今日'],['write','记录'],['memory','记忆'],['action','行动'],['profile','画像']]
+  const pet=PETS.find(x=>x.id===selectedPet?.id)||PETS[0]
+  const petMood=loading?'thinking':page==='write'&&text?'listening':lastSaved?'encouraging':'idle'
   return <div className="shell">
+    {showPetPicker&&<PetPicker onChoose={chosen=>{localStorage.setItem('heart-pet',JSON.stringify(chosen));setSelectedPet(chosen);setShowPetPicker(false)}}/>}
     <header className="topbar"><button className="brand" onClick={()=>setPage('today')}><span className="brand-mark">心</span><span><b>心语</b><small>daily companion</small></span></button><div className="top-actions"><span className={settings.memory_enabled?'memory-status active':'memory-status'}>{settings.memory_enabled?'记忆已开启':'记忆已关闭'}</span><button className="text-button" onClick={toggleMemory}>{settings.memory_enabled?'关闭':'开启'}</button></div></header>
     <div className="layout"><aside><div className="side-label">我的空间</div>{nav.map(([key,label])=><button key={key} className={page===key?'side-item active':'side-item'} onClick={()=>setPage(key)}><span className="side-index">{String(nav.findIndex(x=>x[0]===key)+1).padStart(2,'0')}</span>{label}</button>)}<div className="side-note"><span className="eyebrow">今天的原则</span><p>先听见自己，再决定要做什么。</p></div></aside>
       <main className="content">{message&&<div className="toast" role="status">{message}</div>}
@@ -41,8 +52,16 @@ function App(){
       {page==='profile'&&<Profile profiles={profiles} draft={profileDraft} setDraft={setProfileDraft} onAdd={addProfile} onRemove={removeProfile}/>}
       </main>
     </div>
+    <PetDock pet={pet} mood={petMood} onOpen={()=>setPage('write')} onChange={()=>setShowPetPicker(true)}/>
   </div>
 }
+
+function PetAvatar({pet,mood,large=false}){return <div className={`pet-avatar ${pet.className} ${mood} ${large?'large':''}`} aria-label={`${pet.name}，${mood==='listening'?'正在听你说话':mood==='thinking'?'正在思考':mood==='encouraging'?'正在为你加油':'正在陪伴你'}`}>
+  <svg viewBox="0 0 120 120" role="img"><ellipse className="pet-shadow" cx="60" cy="103" rx="31" ry="7"/><g className="pet-body"><circle className="pet-main" cx="60" cy="61" r="30"/><circle className="pet-ear left" cx="39" cy="35" r="12"/><circle className="pet-ear right" cx="81" cy="35" r="12"/><circle className="pet-eye" cx="49" cy="59" r="3"/><circle className="pet-eye" cx="71" cy="59" r="3"/><path className="pet-mouth" d="M54 70 Q60 75 66 70"/><path className="pet-belly" d="M43 77 Q60 91 77 77"/></g><g className="pet-prop"><path d="M38 72 Q60 88 82 72"/><circle cx="60" cy="72" r="3"/></g></svg><span className="pet-spark one"></span><span className="pet-spark two"></span></div>}
+
+function PetPicker({onChoose}){return <div className="pet-picker-backdrop"><section className="pet-picker" role="dialog" aria-modal="true"><span className="eyebrow">第一次见面</span><h1>选择一个想陪伴你的伙伴</h1><p className="picker-lead">先听听他们怎么介绍自己，再决定谁留在你的页面里。</p><div className="pet-grid">{PETS.map(p=><button className="pet-choice" key={p.id} onClick={()=>onChoose(p)}><PetAvatar pet={p} mood="idle" large/><strong>{p.name} · {p.kind}</strong><span className="pet-tag">{p.tag}</span><p>“{p.intro}”</p><em>让 {p.name} 陪我</em></button>)}</div></section></div>}
+
+function PetDock({pet,mood,onOpen,onChange}){return <aside className="pet-dock"><div className="pet-bubble">{mood==='listening'?'我在听。':mood==='thinking'?'让我想一想。':mood==='encouraging'?'这一步做得很好。':'想说话时，点我就好。'}</div><button className="pet-dock-button" onClick={onOpen}><PetAvatar pet={pet} mood={mood}/></button><div className="pet-dock-actions"><button onClick={onOpen}>和{pet.name}聊聊</button><button onClick={onChange} aria-label="更换陪伴伙伴">更换</button></div></aside>}
 
 function SectionTitle({eyebrow,title,desc}){return <div className="section-title"><span className="eyebrow">{eyebrow}</span><h1>{title}</h1>{desc&&<p>{desc}</p>}</div>}
 function Today({diaries,profiles,latest,onNavigate,onCorrect}){return <><SectionTitle eyebrow="TUESDAY · 30 OCTOBER" title="今天，先从自己开始。" desc="你不需要马上解决什么。先留下一点真实的记录，心语会帮你把它放回上下文里。"/><section className="today-grid"><div className="today-main"><div className="pulse-card"><div><span className="eyebrow">今日状态</span><h2>{latest?`你刚刚记录了「${latest.emotion.label}」`: '还没有今天的记录'}</h2><p>{latest?latest.text:'把现在的感受写下来，之后再决定要不要回应。'}</p></div><button className="circle-action" onClick={()=>onNavigate('write')}>记录</button></div><div className="quick-grid"><button onClick={()=>onNavigate('write')}><span className="quick-no">01</span><strong>写下此刻</strong><small>日记或聊天，按你的方式表达</small></button><button onClick={()=>onNavigate('memory')}><span className="quick-no">02</span><strong>找回一段记忆</strong><small>用原文和日期确认历史上下文</small></button><button onClick={()=>onNavigate('action')}><span className="quick-no">03</span><strong>安排一个行动</strong><small>从当前意愿出发，选一件轻量的事</small></button></div></div><aside className="today-aside"><div className="mini-card"><span className="eyebrow">最近的你</span><div className="metric">{diaries.length}<small>条记录</small></div><div className="emotion-row">{['积极','平稳','低落','焦虑'].map(x=><span key={x} className="emotion-dot"><i className={`dot ${x}`}></i>{x}</span>)}</div></div><div className="mini-card guide"><span className="eyebrow">心语提示</span><p>历史记录只在你开启记忆时被调用。每一次情绪判断都可以被你改写。</p><button className="text-button" onClick={()=>onNavigate('profile')}>管理我的画像 →</button></div></aside></section><section className="recent-section"><div className="section-line"><span className="eyebrow">最近记录</span><button className="text-button" onClick={()=>onNavigate('write')}>查看全部 →</button></div>{diaries.slice(0,3).map(d=><article className="recent-row" key={d.id}><span className="date-block">{d.recorded_at.slice(5,10).replace('-','.')}</span><p>{d.text}</p><button className="tag-button" onClick={()=>onCorrect(d.id,d.emotion.label)}>{d.emotion.label}</button></article>)}</section></>}
