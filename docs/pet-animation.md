@@ -1,0 +1,24 @@
+# 逐帧桌宠动画
+
+当前版本先为小水獭“沐沐”接入一张 8 列 × 6 行的透明精灵图：
+
+- 第 1 行：待机呼吸与眨眼
+- 第 2 行：倾听前倾
+- 第 3 行：思考摸脸
+- 第 4 行：安慰抱枕
+- 第 5 行：鼓励跳跃与挥手
+- 第 6 行：休息睡眠
+
+前端通过 `background-position` 和 `steps(8)` 播放逐帧动画，Agent 状态映射到对应行。小熊、小云朵和小台灯暂时保留为 SVG 预览，后续可分别制作自己的精灵图。
+
+## 资源
+
+- `frontend/public/pets/mumu-sprite.png`：沐沐精灵图
+- `frontend/src/main.jsx`：`PetAvatar` 与 `PetDock` 状态映射
+- `frontend/src/styles.css`：逐帧动画关键帧和减少动态效果支持
+
+## 设计约束
+
+- 宠物动画不覆盖主要输入区域。
+- `prefers-reduced-motion: reduce` 时固定为静态帧。
+- 桌宠状态来自用户输入、Agent 处理状态和行动反馈，不直接把模型判断当成诊断。
