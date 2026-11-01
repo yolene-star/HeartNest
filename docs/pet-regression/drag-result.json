@@ -1,0 +1,15 @@
+{
+  "before": {
+    "x": 1231,
+    "y": 719,
+    "width": 183,
+    "height": 259
+  },
+  "after": {
+    "x": 860,
+    "y": 80,
+    "width": 183,
+    "height": 259
+  },
+  "passed": true
+}
