@@ -1,4 +1,4 @@
-# 心语：个性化情绪陪伴工具
+# HeartNest（心栖）：个性化情绪陪伴工具
 
 ## 推荐：Docker Compose
 
@@ -48,3 +48,15 @@ python classification.py
 5. 关闭“记忆调用”，确认检索结果为空；再删除一条记录并重复检索。
 
 项目只用于日常情绪记录、自我回顾和活动选择辅助，不承担心理诊断或治疗功能。
+
+## 可选：接入 DeepSeek 或其他 OpenAI 兼容模型
+
+默认使用本地规则回复，不需要 API Key。需要更灵活的自然语言回复时，复制 `.env.example` 为 `.env`，填写 DeepSeek Key 后启动：
+
+```powershell
+Copy-Item .env.example .env
+# 编辑 .env，填写 LLM_API_KEY
+docker compose up --build -d
+```
+
+默认配置使用 `https://api.deepseek.com` 和 `deepseek-flash`，也可以通过 `LLM_BASE_URL`、`LLM_MODEL` 切换到其他 OpenAI 兼容服务。LLM 只负责自然表达；安全回应、记忆权限和有来源的行动建议仍由本地逻辑控制。API Key 只通过环境变量传入，不要提交到 Git。
