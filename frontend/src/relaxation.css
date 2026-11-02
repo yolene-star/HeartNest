@@ -1,0 +1,15 @@
+.relaxation-dialog{box-sizing:border-box;width:min(460px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:auto;border:1px solid #dce3d2;border-radius:24px;padding:26px;background:#fbfcf7;color:#35432f;box-shadow:0 20px 90px #263c2930}
+.relaxation-dialog::backdrop{background:#26362e66;backdrop-filter:blur(4px)}
+.relaxation-dialog h2{font-size:22px;line-height:1.6;margin:8px 0}
+.relaxation-dialog>p:not(.eyebrow){font-size:13px;line-height:1.8;color:#6b7765;margin-bottom:20px}
+.relaxation-dialog>button{width:100%;min-height:44px;margin-top:12px;cursor:pointer}
+.relaxation-dialog strong,.relaxation-dialog small{display:block;text-align:left}
+.relaxation-dialog strong{font-size:15px;margin-bottom:6px}.relaxation-dialog small{font-size:12px;line-height:1.8;color:#65735f}
+.relaxation-lake{border:1px solid #d7e1ce;padding:0;border-radius:16px;overflow:hidden;background:#eef3e5;color:inherit}
+.relaxation-lake img{display:block;width:100%;height:115px;object-fit:cover;object-position:center 60%}.relaxation-lake>span{display:block;padding:14px 18px}
+.relaxation-practice{border:1px solid #d7e1ce;border-radius:16px;background:white;padding:15px 18px;color:inherit}
+.relaxation-dialog button:focus-visible,.relaxation-invitation button:focus-visible{outline:3px solid #557742;outline-offset:3px}
+.relaxation-invitation{border:1px solid #dbe6cc;background:#f3f7ed;border-radius:16px;margin-top:15px;padding:14px;font-size:13px;line-height:1.8}
+.relaxation-invitation p{margin:0 0 8px}.relaxation-invitation>div{display:flex;flex-wrap:wrap;gap:8px}.relaxation-invitation button{min-height:44px}
+.welcome-actions{flex-wrap:wrap;max-width:calc(100% - 50px)}
+@media(max-width:650px){.welcome-actions{gap:6px}.welcome-actions .welcome-signal{width:100%}.welcome-actions .secondary-button{min-height:36px;padding:5px 10px}.welcome-strip{min-height:260px}.hero-pet{bottom:38px}.relaxation-dialog{padding:20px}.relaxation-dialog h2{font-size:20px}}

@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checks": [
+    "manual entry, Escape/focus return, explicit request only, one invitation and refusal respected",
+    "acceptance enters real lake, returning preserves conversation",
+    "optional practice uses actual API and expandable WHO source",
+    "390/785/1440 visible choices, usable controls, continue chatting focuses composer",
+    "listen-only/history have no invitation; no automatic diary or interest persistence",
+    "changed preference honored, alternative practice works, safety suppresses invitation, failed API can retry"
+  ],
+  "errors": []
+}

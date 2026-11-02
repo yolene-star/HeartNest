@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "checks": [
+    "real supplied landscape, single companion, silent entry and functional audio toggle",
+    "static motion, pet interaction, scene picker, shared draft and conversation; no automatic save",
+    "390/785/1440 scenery and chat fit, pet clear of controls, Escape closes chat",
+    "system reduced motion and audio stops when leaving",
+    "scene uses the selected companion"
+  ],
+  "errors": []
+}
