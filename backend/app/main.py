@@ -11,6 +11,8 @@ import os
 import sqlite3
 import re
 import uuid
+import time
+from difflib import SequenceMatcher
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +30,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 DIARIES: list[dict[str, Any]] = []
 PROFILES: list[dict[str, Any]] = []
 FEEDBACK: list[dict[str, Any]] = []
+PROFILE_PROPOSALS: dict[str, dict[str, Any]] = {}
 SETTINGS = {
     "memory_enabled": False,
     "save_enabled": True,
@@ -120,12 +123,14 @@ class ProfileIn(BaseModel):
     status: str = Field(default="active")
     source_id: str | None = None
     confirmed: bool = False
+    category: Literal['interest', 'habit', 'trait'] = 'interest'
 
 class ProfilePatch(BaseModel):
-    content: str | None = None
+    content: str | None = Field(default=None, min_length=1, max_length=500)
     type: str | None = None
     status: str | None = None
     confirmed: bool | None = None
+    category: Literal['interest', 'habit', 'trait'] | None = None
 
 class SearchIn(BaseModel):
     query: str = ""
@@ -216,9 +221,101 @@ def understand_text(text: str, conversation: list[dict[str, str]] | None = None)
                         'analysis_source': 'llm', 'reason': understanding['reason']},
             'intent': understanding['intent'], 'memory_query': understanding['memory_query'],
             'source': 'llm',
+            'profile_candidates': understanding.get('profile_candidates', []) + local_profile_candidates(text),
         }
     return {'emotion': {**classify_emotion(text), 'analysis_source': 'rules', 'reason': '本地关键词初判，仅供参考。'},
-            'intent': 'recall' if is_history_request(text) else 'share', 'memory_query': text, 'source': 'rules'}
+            'intent': 'recall' if is_history_request(text) else 'share', 'memory_query': text, 'source': 'rules',
+            'profile_candidates': local_profile_candidates(text)}
+
+
+def local_profile_candidates(text):
+    if re.search(r'不要|别叫|不想.*记录|朋友|他说|她说|如果|假如|假设|[“「"]', text):
+        return []
+    match = re.search(r'(?:以后|从今天开始|今后)?(?:你要|请你|你可以|请)?叫我([^，。！？\s]{1,20})', text)
+    if match:
+        return [{'kind': 'nickname', 'content': match[1].rstrip('吧'), 'evidence': match[0]}]
+    match = re.search(r'我(?:每天|每晚|每次|一直|通常|习惯)[^。！？\n]{2,100}', text)
+    if match and re.search(r'焦虑|低落|难过|疲惫|生气|紧张|开心|平静', match[0]):
+        return []
+    return [{'kind': 'habit', 'content': match[0].removeprefix('我'), 'evidence': match[0]}] if match else []
+
+
+def normalized_fact(text):
+    return re.sub(r'[\W_]', '', text.lower()).removeprefix('我')
+
+
+def duplicate_fact(content, excluding=None):
+    value = normalized_fact(content)
+    return next((p for p in PROFILES if p['id'] != excluding and
+                 (normalized_fact(p['content']) == value or SequenceMatcher(None, normalized_fact(p['content']), value).ratio() > .92)), None)
+
+
+def propose_profile_updates(text, candidates):
+    if re.search(r'不要|不想.*记录|朋友说|他说|她说|如果|假如|假设|[“「"]', text):
+        return []
+    timestamp = time.monotonic()
+    for token, item in list(PROFILE_PROPOSALS.items()):
+        if timestamp - item['time'] > 1800:
+            del PROFILE_PROPOSALS[token]
+    proposals, seen = [], set()
+    for candidate in candidates[:6]:
+        kind, content, evidence = (str(candidate.get(key, '')).strip() for key in ('kind', 'content', 'evidence'))
+        if kind not in {'nickname', 'response_preference', 'habit', 'trait'} or not content or len(content) > 200 or not evidence or evidence not in text:
+            continue
+        if kind == 'nickname' and (len(content) > 40 or content == SETTINGS['nickname']):
+            continue
+        if kind == 'response_preference' and (content not in {'listen_first', 'think_together', 'adapt'} or content == SETTINGS[kind]):
+            continue
+        if kind in {'habit', 'trait'} and (duplicate_fact(content) or re.search(r'我叫|叫我|称呼|你要.*回应', content)):
+            continue
+        if (kind, content) in seen:
+            continue
+        seen.add((kind, content))
+        token = uuid.uuid4().hex
+        public = {'id': token, 'kind': kind, 'content': content, 'evidence': evidence}
+        PROFILE_PROPOSALS[token] = {**public, 'time': timestamp, 'status': 'pending', 'base': SETTINGS.get(kind)}
+        proposals.append(public)
+        if len(proposals) == 3:
+            break
+    while len(PROFILE_PROPOSALS) > 128:
+        del PROFILE_PROPOSALS[next(iter(PROFILE_PROPOSALS))]
+    return proposals
+
+
+@app.post('/api/profile/proposals/{proposal_id}/confirm')
+def confirm_profile_proposal(proposal_id: str):
+    proposal = PROFILE_PROPOSALS.get(proposal_id)
+    if not proposal or time.monotonic() - proposal['time'] > 1800:
+        raise HTTPException(409, '提议已过期，请重新告诉我')
+    if proposal['status'] == 'confirmed':
+        return proposal['result']
+    if proposal['status'] != 'pending':
+        raise HTTPException(409, '这条提议已取消')
+    kind, content = proposal['kind'], proposal['content']
+    if kind in {'nickname', 'response_preference'}:
+        if SETTINGS[kind] != proposal['base']:
+            raise HTTPException(409, '设置已经变化，请重新确认最新内容')
+        SETTINGS[kind] = content
+        result = {'status': 'confirmed', 'kind': kind, 'content': content}
+    else:
+        item = duplicate_fact(content)
+        if item is None:
+            item = {'id': uuid.uuid4().hex[:10], 'content': content, 'category': kind, 'type': '小习惯' if kind == 'habit' else '个人特征',
+                    'status': 'active', 'confirmed': True, 'source': 'conversation', 'source_text': proposal['evidence'],
+                    'source_id': None, 'created_at': now_iso(), 'updated_at': now_iso()}
+            PROFILES.append(item)
+        result = {'status': 'confirmed', 'kind': kind, 'profile': item}
+    proposal.update(status='confirmed', result=result)
+    return result
+
+
+@app.post('/api/profile/proposals/{proposal_id}/dismiss')
+def dismiss_profile_proposal(proposal_id: str):
+    proposal = PROFILE_PROPOSALS.get(proposal_id)
+    if not proposal or proposal['status'] == 'confirmed':
+        raise HTTPException(409, '提议已失效或已确认')
+    proposal['status'] = 'dismissed'
+    return {'status': 'dismissed'}
 
 
 def memory_search(query: str, top_k: int = 5) -> list[dict[str, Any]]:
@@ -282,6 +379,7 @@ def companion_respond(payload: CompanionIn):
     response["llm_used"] = False
     response['reply_source'] = 'safety' if response['safety'] else 'memory' if asks_about_history else 'advice' if payload.want_advice else 'rules'
     response['reply_fallback_reason'] = None
+    response['profile_proposals'] = propose_profile_updates(text, understanding.get('profile_candidates', [])) if not response['safety'] and not asks_about_history and not payload.want_advice else []
     if not response["safety"] and not payload.want_advice and not asks_about_history:
         mode = llm_reply_mode()
         llm_reply = request_llm_reply(text, payload.response_preference, understanding['emotion']['label'], conversation)
@@ -291,6 +389,8 @@ def companion_respond(payload: CompanionIn):
             response['reply_source'] = 'llm'
         else:
             response['reply_fallback_reason'] = 'unavailable' if mode == 'ready' else mode
+    if not response['llm_used'] and response['profile_proposals']:
+        response['reply'] = '我听到了。下面这项资料要不要留下，由你确认；不记录也可以继续聊。'
     return response
 
 @app.get("/api/diaries")
@@ -351,6 +451,8 @@ def list_profile():
 
 @app.post("/api/profile")
 def create_profile(payload: ProfileIn):
+    if payload.category != 'interest' and duplicate_fact(payload.content):
+        raise HTTPException(409, '已有相同的画像内容')
     item = {"id": uuid.uuid4().hex[:10], **payload.model_dump(), "created_at": now_iso(), "updated_at": now_iso()}
     PROFILES.append(item)
     return item
@@ -360,6 +462,8 @@ def update_profile(profile_id: str, payload: ProfilePatch):
     item = next((x for x in PROFILES if x["id"] == profile_id), None)
     if not item:
         raise HTTPException(404, "画像条目不存在")
+    if payload.content and item.get('category', 'interest') != 'interest' and duplicate_fact(payload.content, profile_id):
+        raise HTTPException(409, '已有相同的画像内容')
     for key, value in payload.model_dump(exclude_none=True).items():
         item[key] = value
     item["updated_at"] = now_iso()

@@ -311,6 +311,15 @@ body{background:#eef0ea}
   .pet-dock .pet-bubble{max-width:135px}
 }
 
+.profile-update-card { margin: 12px 0; padding: 12px 14px; border: 1px solid #c8d3bf; border-radius: 12px; background: #f4f5eb; color: #465344; overflow-wrap: anywhere; }
+.profile-update-card > strong { font-size: 14px; }
+.profile-update-card p { margin: 8px 0; white-space: pre-wrap; }
+.profile-update-card summary, .flexible-profile summary { cursor: pointer; font-size: 12px; color: #66735d; }
+.profile-update-card blockquote, .flexible-profile blockquote { margin: 8px 0; font-size: 13px; white-space: pre-wrap; }
+.profile-card-actions { display: flex; gap: 16px; margin-top: 10px; align-items: center; }
+.flexible-profile textarea { min-height: 90px; resize: vertical; }
+.flexible-profile > p { line-height: 1.6; }
+
 .advice-history:empty { display: none; }
 .advice-history article { padding: 10px 0; margin-bottom: 12px; border-bottom: 1px dashed #c8d3bf; }
 .advice-history small { color: #66735d; }

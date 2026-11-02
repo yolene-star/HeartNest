@@ -233,7 +233,7 @@ function CompanionPage({ quiet, setQuiet, petMood, pet, nickname, responsePrefer
       const invite = !job.wantAdvice && !quiet && !relaxationInvited.current && explicitRest && !declinesAdvice && !recallsRest && !response.safety && response.intent !== 'recall' && !response.suggestion
       if (invite) relaxationInvited.current = true
       completedRequests.current.add(job.id)
-      setChat(items => [...items.filter(item => item.id !== `failed-${job.id}`), { id: crypto.randomUUID(), userId: job.userId, role: 'assistant', text: response.reply, excludedAdviceIds: [...(job.excludeAdviceIds || []), ...(response.suggestion ? [response.suggestion.id] : [])], suggestion: response.suggestion, memories: response.memories || [], emotionSuggestion: response.emotion_suggestion, safety: response.safety, memoryEnabled: response.memory_enabled, relaxationInvitation: invite, adviceContext: job.wantAdvice ? content : null, replySource: response.reply_source || (response.safety ? 'safety' : response.intent === 'recall' ? 'memory' : response.suggestion ? 'advice' : typeof response.llm_used === 'boolean' ? response.llm_used ? 'llm' : 'rules' : null), fallbackReason: response.reply_fallback_reason, understandingSource: response.understanding_source }])
+      setChat(items => [...items.filter(item => item.id !== `failed-${job.id}`), { id: crypto.randomUUID(), userId: job.userId, role: 'assistant', text: response.reply, excludedAdviceIds: [...(job.excludeAdviceIds || []), ...(response.suggestion ? [response.suggestion.id] : [])], profileProposals: response.profile_proposals || [], suggestion: response.suggestion, memories: response.memories || [], emotionSuggestion: response.emotion_suggestion, safety: response.safety, memoryEnabled: response.memory_enabled, relaxationInvitation: invite, adviceContext: job.wantAdvice ? content : null, replySource: response.reply_source || (response.safety ? 'safety' : response.intent === 'recall' ? 'memory' : response.suggestion ? 'advice' : typeof response.llm_used === 'boolean' ? response.llm_used ? 'llm' : 'rules' : null), fallbackReason: response.reply_fallback_reason, understandingSource: response.understanding_source }])
       if (job.saveOriginal) await persistTurn({ id: job.userId, text: content }, job.saveResponse ? response.reply : null)
       return response
     } catch {
@@ -296,7 +296,7 @@ function CompanionPage({ quiet, setQuiet, petMood, pet, nickname, responsePrefer
             {savedIds.includes(message.id) && <span className="saved-mini-tag">已加入 Agent 记忆库</span>}
           </article> : <article className="chat-turn agent-turn" key={message.id} data-testid="assistant-reply">
             <div className="agent-avatar"><PetAvatar pet={pet} mood={message.safety ? 'comforting' : 'idle'} /></div>
-            <div className="agent-content"><div className="agent-name">{pet.name}<span>陪伴中</span></div><div className="message agent-message">{message.text}</div><ReplyProvenance message={message} />
+            <div className="agent-content"><div className="agent-name">{pet.name}<span>陪伴中</span></div><div className="message agent-message">{message.text}</div><ReplyProvenance message={message} />{message.profileProposals?.map(proposal => <ProfileUpdateCard key={proposal.id} proposal={proposal} onRefresh={onDiarySaved} />)}
               {message.relaxationInvitation && <section className="relaxation-invitation" data-testid="relaxation-invitation"><p>想不想一起缓一缓？可以安静待会儿，也可以看看一个小办法。</p><div><button className="secondary-button" onClick={() => { dismissInvitation(message.id); setRelaxationOpen(true) }}>看看放松方式</button><button className="text-link" onClick={() => { dismissInvitation(message.id) }}>先不用</button></div></section>}
               {message.memories?.length > 0 && <div className="memory-citations"><span className="evidence-kicker">找到的历史记录</span>{message.memories.map(memory => <blockquote key={memory.id}><p>日记原文：“{memory.text}”</p>{memory.response_text && <p className="memory-agent-response">心栖当时回应：“{memory.response_text}”</p>}<cite>{dateLabel(memory.recorded_at)}</cite></blockquote>)}</div>}
               {message.emotionSuggestion && !message.safety && <EmotionPrompt suggestion={message.emotionSuggestion} turn={chat.find(item => item.id === message.userId) || lastUserTurn} onConfirm={label => { const linked = chat.find(item => item.id === message.userId) || lastUserTurn; if (linked) setTurnEmotion(linked.id, label) }} editing={editEmotionFor === message.id} onEdit={() => setEditEmotionFor(editEmotionFor === message.id ? null : message.id)} />}
@@ -536,7 +536,8 @@ function ReviewPage({ metrics, diaries, onOpenDiary }) {
   </div>
 }
 
-function SettingsPage({ settings, profiles, pet, onUpdate, onChoosePet, onRefresh }) {
+function SettingsPage({ settings, profiles: allProfiles, pet, onUpdate, onChoosePet, onRefresh }) {
+  const profiles = allProfiles.filter(p => !p.category || p.category === 'interest')
   const [profileText, setProfileText] = useState('')
   const [profileType, setProfileType] = useState('喜欢')
   const [editingProfile, setEditingProfile] = useState(null)
@@ -569,8 +570,50 @@ function SettingsPage({ settings, profiles, pet, onUpdate, onChoosePet, onRefres
     <section className="settings-section profile-settings"><div className="aside-heading"><div><p className="eyebrow">确认过的偏好</p><h2>只记住你确认过的事</h2></div><span>{profiles.length} 条</span></div>{profiles.map(profile => <article className="profile-setting-row" key={profile.id}>{editingProfile?.id === profile.id ? <form className="profile-edit-form" onSubmit={saveProfile}><label>修改偏好内容<input className="text-input" value={editingProfile.content} onChange={e => setEditingProfile(p => ({ ...p, content: e.target.value }))} /></label><label>修改偏好类型<select className="select-input" value={editingProfile.type} onChange={e => setEditingProfile(p => ({ ...p, type: e.target.value }))}>{['喜欢', '反感', '想尝试', '已体验'].map(type => <option key={type}>{type}</option>)}</select></label><button className="secondary-button" disabled={profileBusy || !editingProfile.content.trim()}>保存偏好</button><button type="button" className="text-link" disabled={profileBusy} onClick={() => setEditingProfile(null)}>取消</button></form> : <><div><strong>{profile.content}</strong><span>{profile.type} · {profile.confirmed ? '已确认' : '待确认'}</span><small>{profile.source_id ? `来自日记 ${profile.source_id}` : profile.source_feedback_id ? `来自活动反馈 ${profile.source_feedback_id}` : '手动添加'} · {dateLabel(profile.updated_at || profile.created_at)}</small></div><div><button className="text-link" onClick={() => setEditingProfile({ ...profile })}>编辑</button><button className="text-link danger-link" onClick={() => removeProfile(profile.id)}>删除</button></div></>}</article>)}
       <form className="profile-add-form" onSubmit={addProfile}><input aria-label="偏好内容" className="text-input" placeholder="例如：喜欢安静的散步" value={profileText} onChange={event => setProfileText(event.target.value)} /><select aria-label="偏好类型" className="select-input" value={profileType} onChange={event => setProfileType(event.target.value)}><option>喜欢</option><option>反感</option><option>想尝试</option><option>已体验</option></select><button className="secondary-button" disabled={!profileText.trim()}>添加偏好</button></form>
     </section>
-    <p className="settings-footnote">聊天默认不会自动变成日记。你可以分别关闭保存与记忆调用。</p>
+    <FlexibleProfileNotes profiles={allProfiles.filter(p => ['habit', 'trait'].includes(p.category))} onRefresh={onRefresh} /><p className="settings-footnote">聊天默认不会自动变成日记。你可以分别关闭保存与记忆调用。</p>
   </div>
+}
+
+const PROFILE_KIND_LABELS = { nickname: '称呼', response_preference: '回应方式', habit: '小习惯', trait: '个人特征' }
+const RESPONSE_LABELS = { listen_first: '先听我说', think_together: '一起想办法', adapt: '看当下情况' }
+
+function ProfileUpdateCard({ proposal, onRefresh }) {
+  const [status, setStatus] = useState('pending')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const act = async action => {
+    setBusy(true); setError('')
+    try {
+      await request(`/profile/proposals/${proposal.id}/${action}`, { method: 'POST' })
+      setStatus(action === 'confirm' ? 'confirmed' : 'dismissed')
+      if (action === 'confirm') await onRefresh()
+    } catch { setError('这次操作没有完成，请重试；如果提议已过期，请重新告诉我。'); }
+    finally { setBusy(false) }
+  }
+  return <section className="profile-update-card" aria-label="个人资料更新确认">
+    <strong>{status === 'confirmed' ? '已更新到「我的」' : status === 'dismissed' ? '这次不记录' : `要更新你的${PROFILE_KIND_LABELS[proposal.kind]}吗？`}</strong>
+    <p>{proposal.kind === 'response_preference' ? RESPONSE_LABELS[proposal.content] : proposal.content}</p>
+    {status === 'pending' && <><details><summary>查看原话与保存范围</summary><blockquote>{proposal.evidence}</blockquote><small>确认只保存这一项资料，不会自动保存整段聊天。可在「我的」修改或删除。</small></details><div className="profile-card-actions"><button className="secondary-button" disabled={busy} onClick={() => act('confirm')}>确认更新</button><button className="text-link" disabled={busy} onClick={() => act('dismiss')}>暂不记录</button></div></>}
+    {error && <p role="alert" className="inline-error">{error}</p>}
+  </section>
+}
+
+function FlexibleProfileNotes({ profiles, onRefresh }) {
+  const [editing, setEditing] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const mutate = async (id, method, body) => {
+    setBusy(true); setError('')
+    try { await request(`/profile${id ? `/${id}` : ''}`, body ? json(method, body) : { method }); await onRefresh(); setEditing(null) }
+    catch { setError('没有保存成功，请检查是否与已有内容重复后重试。') }
+    finally { setBusy(false) }
+  }
+  return <section className="settings-section flexible-profile"><p className="eyebrow">由你确认的小习惯与个人特征</p><h2>关于我的一些小事</h2><p>只记录你愿意留下的特点，和兴趣偏好分开整理。</p>
+    {!profiles.length && <p className="quiet-empty">还没有记录。聊天中发现的小习惯，会先问过你。</p>}
+    {profiles.map(item => <article className="profile-setting-row" key={item.id}><div><strong>{item.content}</strong><span>{PROFILE_KIND_LABELS[item.category]} · 已确认</span><small>{item.source === 'conversation' ? '来自对话，经你确认' : '由你填写'} · {dateLabel(item.updated_at || item.created_at)}</small>{item.source_text && <details><summary>查看来源原话</summary><blockquote>{item.source_text}</blockquote></details>}</div><div><button className="text-link" disabled={busy} onClick={() => setEditing({ ...item })}>编辑小事</button><button className="text-link danger-link" disabled={busy} onClick={() => mutate(item.id, 'DELETE')}>删除小事</button></div></article>)}
+    {editing ? <form className="profile-edit-form" onSubmit={e => { e.preventDefault(); mutate(editing.id, editing.id ? 'PATCH' : 'POST', { content: editing.content.trim(), category: editing.category, type: PROFILE_KIND_LABELS[editing.category], confirmed: true }) }}><label>小事内容<textarea className="text-input" maxLength={200} value={editing.content} onChange={e => setEditing({ ...editing, content: e.target.value })} /></label><label>小事类型<select className="select-input" value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })}><option value="habit">小习惯</option><option value="trait">个人特征</option></select></label><button className="secondary-button" disabled={busy || !editing.content.trim()}>保存小事</button><button type="button" className="text-link" onClick={() => setEditing(null)}>取消</button></form> : <button className="secondary-button" onClick={() => setEditing({ content: '', category: 'habit' })}>补充一件小事</button>}
+    {error && <p className="inline-error" role="alert">{error}</p>}
+  </section>
 }
 
 function SettingSwitch({ label, description, checked, onToggle }) {
