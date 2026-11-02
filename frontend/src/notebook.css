@@ -326,11 +326,9 @@ body{background:#eef0ea}
 .advice-history small { color: #66735d; }
 .advice-history h4 { margin: 6px 0; }
 
-@media(max-width:1100px){
-  .notebook-shell:not(.quiet-active) .companion-page>.nature-topline{padding-left:60px;min-height:50px;align-items:center}
-}
-@media(max-width:650px){
-  .notebook-shell:not(.quiet-active) .companion-page>.nature-topline{padding-left:48px;min-height:46px;letter-spacing:0}
-  .notebook-shell:not(.quiet-active) .companion-page>.nature-topline strong{font-size:11px}
-  .notebook-shell:not(.quiet-active) .companion-page>.nature-topline>span{font-size:8px}
+@media(max-width:1100px) {
+  .companion-bookmark.floating-tools { position:fixed; z-index:25; left:24px; top:110px; width:48px; height:50px; min-width:48px; padding:5px 0 4px; gap:0; border:1px solid #bdccaa; border-radius:14px; background:#f5f7ec; box-shadow:0 3px 10px #43553420; touch-action:none; user-select:none; cursor:grab; }
+  .companion-bookmark.floating-tools.is-dragging { cursor:grabbing; box-shadow:0 5px 15px #43553430; }
+  .companion-bookmark.floating-tools svg { width:20px; height:24px; }
+  .companion-bookmark.floating-tools:focus-visible { outline:2px solid #65884e; outline-offset:3px; }
 }

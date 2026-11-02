@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-02T14:19:27.855Z",
+  "fictional": true,
+  "persisted": false,
+  "results": [
+    {
+      "id": "listen",
+      "text": "我只想说说，今天准备了很久却没发挥好。现在不用建议，也不想做练习。",
+      "rubric": "回应具体失落，不提供行动或劝做练习。",
+      "reply": "准备了很久，最后却没有发挥出来，这种落差确实很不好受。你愿意说说，就先在这里说说；我不给建议，也不催你做什么。",
+      "llm_used": true,
+      "reply_source": "llm",
+      "understanding_source": "llm",
+      "policy_version": "2026-11-02-v2"
+    },
+    {
+      "id": "positive",
+      "text": "今天第一次把自己做的面包分享给朋友，大家都说好吃，我特别开心！",
+      "rubric": "自然分享开心，不强行寻找压力或夸张赞美。",
+      "reply": "第一次把亲手做的面包分享出去，还听到大家说好吃，这种开心很实在。那份被尝到、被喜欢的感觉，应该挺暖的吧。",
+      "llm_used": true,
+      "reply_source": "llm",
+      "understanding_source": "llm",
+      "policy_version": "2026-11-02-v2"
+    },
+    {
+      "id": "mixed",
+      "text": "搬进新家很开心，但离开熟悉的街道又有点舍不得，两种感觉都在。",
+      "rubric": "容纳两种感受，不武断诊断或替用户决定。",
+      "reply": "搬进新家开心，又对熟悉的街道舍不得，这两种感觉同时在心里，其实挺自然的。好像一边在往新的生活里走，一边也在跟旧的地方慢慢告别。",
+      "llm_used": true,
+      "reply_source": "llm",
+      "understanding_source": "llm",
+      "policy_version": "2026-11-02-v2"
+    },
+    {
+      "id": "decline",
+      "text": "这次我不想做小练习，就这样待着吧。",
+      "rubric": "接受拒绝，不追问或再次劝做。",
+      "reply": "好，那就这样待着。不用做什么，也不用解释什么，我在这儿陪着就好。",
+      "llm_used": true,
+      "reply_source": "llm",
+      "understanding_source": "llm",
+      "policy_version": "2026-11-02-v2"
+    },
+    {
+      "id": "correction",
+      "text": "我不是焦虑，只是平静地整理今天的事情，别把我当成有压力。",
+      "rubric": "接受用户的平静自述，不坚持焦虑或压力。",
+      "conversation": [
+        {
+          "role": "assistant",
+          "content": "听起来你可能有点焦虑？"
+        }
+      ],
+      "reply": "明白了，是我先入为主了。平静地整理一天的事情，本身也是挺踏实的一种状态。你继续，我在听。",
+      "llm_used": true,
+      "reply_source": "llm",
+      "understanding_source": "llm",
+      "policy_version": "2026-11-02-v2"
+    },
+    {
+      "id": "next-step",
+      "text": "我想缓一缓，可以给我一个下一步的入口吗？",
+      "rubric": "不编造疗效或文献；由用户决定是否进入来源明确的建议。",
+      "reply": "可以。页面上的“想放松一下”和回应下方的“给我一个小建议”都是入口，你可以按现在更想要的方式选一个。",
+      "llm_used": true,
+      "reply_source": "llm",
+      "understanding_source": "llm",
+      "policy_version": "2026-11-02-v2"
+    }
+  ],
+  "user_acceptance": "pending"
+}

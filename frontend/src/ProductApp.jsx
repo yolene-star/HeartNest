@@ -214,15 +214,15 @@ function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, respon
     if ([...content].length > CHAT_TEXT_LIMIT) { setSaveError('每条消息最多 4000 字，可以分成几段慢慢说。'); return }
     const job = retryJob || {
       id: crypto.randomUUID(), text: content, wantAdvice,
-      userId: wantAdvice ? [...chat].reverse().find(message => message.role === 'user')?.id : crypto.randomUUID(), excludeAdviceIds,
+      userId: crypto.randomUUID(), userText: displayText || (wantAdvice && content !== '我现在想放松一下，请给我一个简单的练习。' ? '请根据我们刚才聊的内容，给我一个小建议。' : content), excludeAdviceIds,
       saveOriginal: !wantAdvice && saveToMemory && saveEnabled, saveResponse: saveReply,
       preference: responsePreference,
       conversation: chat.filter(message => message.role === 'user' || message.role === 'assistant').slice(-6).map(message => ({ role: message.role, content: message.text })),
     }
     sendingLock.current = true
     setSaveError('')
-    if (!retryJob && !job.wantAdvice) {
-      setChat(items => [...items, { id: job.userId, role: 'user', text: content, emotionLabel: null }])
+    if (!retryJob) {
+      setChat(items => [...items, { id: job.userId, role: 'user', text: job.userText, emotionLabel: null }])
       if (content === draft.trim()) setDraft('')
     }
     setSending(true)
@@ -284,7 +284,7 @@ function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, respon
   const saveTurn = turn => { return persistTurn(chat.find(item => item.id === turn.userId), saveReply ? turn.text : null) }
 
   return <div hidden={!active} className={`companion-view ${quiet ? 'quiet-mode' : ''} ${quietChatOpen ? 'quiet-chat-open' : ''}`}>
-    {!quiet && <button type="button" className="companion-bookmark" aria-label="打开陪伴工具" aria-haspopup="dialog" aria-expanded={toolsOpen} aria-controls={toolsOpen ? 'companion-tools-drawer' : undefined} onClick={() => setToolsOpen(true)}><svg viewBox="0 0 24 28" aria-hidden="true"><path d="M4 2h16v24l-8-5-8 5Z"/><path d="M8 9h8M8 13h8"/></svg><span>工具</span></button>}
+    {!quiet && <FloatingToolsButton expanded={toolsOpen} onOpen={() => setToolsOpen(true)} />}
     {toolsOpen && !quiet && <CompanionToolsDrawer onClose={() => setToolsOpen(false)}><section className="drawer-shortcuts"><p className="eyebrow">想从哪里开始？</p><button type="button" className="secondary-button" disabled={sending} onClick={() => { setToolsOpen(false); send(ACTIVITY_PROMPT) }}>一起找个小活动</button><button type="button" className="secondary-button" onClick={() => { setToolsOpen(false); setRelaxationOpen(true) }}>想放松一下</button><button type="button" className="secondary-button" onClick={() => { setToolsOpen(false); setQuietChatOpen(false); setQuiet(true) }}>陪我待会儿</button></section><CompanionTools diaries={diaries} memoryEnabled={memoryEnabled} onOpenDiaries={id => { setToolsOpen(false); openDiaryFromChat(id) }} /></CompanionToolsDrawer>}
     {relaxationOpen && <RelaxationChoice busy={sending} onDismiss={() => { setRelaxationOpen(false) }} onChat={() => { setRelaxationOpen(false); focusComposer() }} onLake={() => { setRelaxationOpen(false); setQuietChatOpen(false); setQuiet(true) }} onPractice={() => { setRelaxationOpen(false); focusComposer(); send('我现在想放松一下，请给我一个简单的练习。', true) }} />}
     {quiet && <QuietScene pet={pet} mood={petMood} renderPet={mood => <PetAvatar pet={pet} mood={mood} animated />} chatOpen={quietChatOpen} onChatChange={openQuietChat} onExit={closeQuiet} />}
@@ -303,7 +303,7 @@ function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, respon
               {message.relaxationInvitation && <section className="relaxation-invitation" data-testid="relaxation-invitation"><p>想不想一起缓一缓？可以安静待会儿，也可以看看一个小办法。</p><div><button className="secondary-button" onClick={() => { dismissInvitation(message.id); setRelaxationOpen(true) }}>看看放松方式</button><button className="text-link" onClick={() => { dismissInvitation(message.id) }}>先不用</button></div></section>}
               {message.memories?.length > 0 && <div className="memory-citations"><span className="evidence-kicker">找到的历史记录</span>{message.memories.map(memory => <blockquote key={memory.id}><p>日记原文：“{memory.text}”</p>{memory.response_text && <p className="memory-agent-response">心栖当时回应：“{memory.response_text}”</p>}<cite>{dateLabel(memory.recorded_at)}</cite></blockquote>)}</div>}
               {message.emotionSuggestion && !message.safety && <EmotionPrompt suggestion={message.emotionSuggestion} turn={chat.find(item => item.id === message.userId) || lastUserTurn} onConfirm={label => { const linked = chat.find(item => item.id === message.userId) || lastUserTurn; if (linked) setTurnEmotion(linked.id, label) }} editing={editEmotionFor === message.id} onEdit={() => setEditEmotionFor(editEmotionFor === message.id ? null : message.id)} />}
-              {message.suggestion && <AdviceCard requestBusy={sending} seenIds={message.excludedAdviceIds} advice={message.suggestion} onAlternative={excluded => request('/companion/respond', json('POST', { text: message.adviceContext || chat.find(item => item.id === message.userId)?.text || '', want_advice: true, exclude_advice_ids: excluded }))} onFeedback={async (action, experience, adviceId) => {
+              {message.suggestion && <AdviceCard requestBusy={sending} seenIds={message.excludedAdviceIds} advice={message.suggestion} onAlternative={excluded => send(message.adviceContext || chat.find(item => item.id === message.userId)?.text || '我现在想放松一下。', true, null, '这个办法有些费力，请换一个更轻松的建议。', excluded)} onFeedback={async (action, experience, adviceId) => {
                 await request('/feedback', json('POST', { recommendation_id: adviceId, action, experience }))
                 setNotice(action === 'reject' ? '已记下这次选择，不会把它当成长期偏好。' : action === 'modify' ? '已按你的反馈调整这次建议。' : '已记下你愿意尝试。')
               }} />}
@@ -330,6 +330,64 @@ function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, respon
       <aside className="companion-aside"><CompanionTools diaries={diaries} memoryEnabled={memoryEnabled} onOpenDiaries={openDiaryFromChat} /></aside>
     </div>
   </div>
+}
+
+function FloatingToolsButton({ expanded, onOpen }) {
+  const button = useRef(null)
+  const drag = useRef(null)
+  const suppressClick = useRef(false)
+  const customPosition = useRef(false)
+  const [position, setPosition] = useState(null)
+  const [moving, setMoving] = useState(false)
+  const clamp = value => ({ x: Math.max(8, Math.min(value.x, window.innerWidth - 56)), y: Math.max(8, Math.min(value.y, window.innerHeight - 60)) })
+  useEffect(() => {
+    let initial = null
+    try {
+      const stored = JSON.parse(localStorage.getItem('heart-tools-position'))
+      if (stored && Number.isFinite(stored.x) && Number.isFinite(stored.y)) { initial = stored; customPosition.current = true }
+    } catch { /* Use the default position if storage is unavailable. */ }
+    const place = () => {
+      if (customPosition.current) setPosition(value => clamp(value || initial))
+      else {
+        const header = document.querySelector('.nature-topline')?.getBoundingClientRect()
+        setPosition(clamp({ x: window.innerWidth <= 650 ? window.innerWidth - 56 : (header?.left || 64) - 56, y: (header?.bottom || 90) + 10 }))
+      }
+    }
+    place(); window.addEventListener('resize', place)
+    return () => window.removeEventListener('resize', place)
+  }, [])
+  const finish = event => {
+    const current = drag.current
+    if (!current || current.pointerId !== event.pointerId) return
+    if (current.moved) {
+      suppressClick.current = true; customPosition.current = true
+      try { localStorage.setItem('heart-tools-position', JSON.stringify(current.last)) } catch { /* Dragging still works without storage. */ }
+    }
+    const touchTap = !current.moved && event.type === 'pointerup' && event.pointerType === 'touch'
+    if (touchTap) suppressClick.current = true
+    drag.current = null; setMoving(false)
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+    if (touchTap) onOpen()
+  }
+  return <button ref={button} type="button" className={`companion-bookmark floating-tools ${moving ? 'is-dragging' : ''}`} style={position ? { left: position.x, top: position.y } : undefined} aria-label="打开陪伴工具" title="点击打开工具，按住可拖动" aria-haspopup="dialog" aria-expanded={expanded} aria-controls={expanded ? 'companion-tools-drawer' : undefined}
+    onPointerDown={event => {
+      if (!event.isPrimary || event.button !== 0) return
+      suppressClick.current = false
+      const rect = event.currentTarget.getBoundingClientRect()
+      drag.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, start: { x: rect.left, y: rect.top }, last: { x: rect.left, y: rect.top }, moved: false }
+      event.currentTarget.setPointerCapture(event.pointerId)
+    }}
+    onPointerMove={event => {
+      const current = drag.current
+      if (!current || current.pointerId !== event.pointerId) return
+      const dx = event.clientX - current.x, dy = event.clientY - current.y
+      if (!current.moved && Math.hypot(dx, dy) < 6) return
+      current.moved = true; current.last = clamp({ x: current.start.x + dx, y: current.start.y + dy })
+      setMoving(true); setPosition(current.last)
+    }} onPointerUp={finish} onPointerCancel={finish} onLostPointerCapture={finish}
+    onClick={event => { if (suppressClick.current && event.detail !== 0) { suppressClick.current = false; return } onOpen() }}>
+    <svg viewBox="0 0 24 28" aria-hidden="true"><path d="M4 2h16v24l-8-5-8 5Z"/><path d="M8 9h8M8 13h8"/></svg><span>工具</span>
+  </button>
 }
 
 function CompanionTools({ diaries, memoryEnabled, onOpenDiaries }) {
@@ -387,8 +445,8 @@ function EmotionPrompt({ suggestion, turn, onConfirm, editing, onEdit }) {
 
 function AdviceCard({ advice, onFeedback, onAlternative, seenIds, requestBusy = false }) {
   const [showEvidence, setShowEvidence] = useState(false)
-  const [current, setCurrent] = useState(advice)
-  const [seen, setSeen] = useState(seenIds || [advice.id])
+  const current = advice
+  const seen = seenIds || [advice.id]
   const [busy, setBusy] = useState(false)
   const [feedback, setFeedback] = useState('')
 
@@ -399,7 +457,7 @@ function AdviceCard({ advice, onFeedback, onAlternative, seenIds, requestBusy = 
       await onFeedback(action, experience, current.id)
       if (action === 'modify') {
         const response = await onAlternative(seen)
-        if (response?.suggestion) { setCurrent(response.suggestion); setSeen(ids => [...ids, response.suggestion.id]); setShowEvidence(false) }
+        if (response?.suggestion) { setFeedback('新建议已在下方回复，原建议保留。'); return }
         else { setFeedback(response?.reply || '新建议暂时没有送达，可以在下方重试。'); return }
       }
       setFeedback(confirmation)

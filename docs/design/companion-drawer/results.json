@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "793/390/1100 bookmark opens right drawer",
+    "focus trap and Escape focus return",
+    "backdrop and close button",
+    "activity shortcut sends normal chat and keeps draft",
+    "wide resize restores sidebar",
+    "diary navigation",
+    "default records unchanged"
+  ],
+  "errors": []
+}

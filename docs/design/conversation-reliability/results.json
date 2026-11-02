@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "checks": [
+    "2000/2001/4000-character real API multi-turn conversation and advice request",
+    "repeated failures retry same round/context without duplicate messages or changed save consent",
+    "save-original-and-response consent retained, double retry guarded, one diary created",
+    "practice request retains one user bubble and retries inside shared lakeside conversation",
+    "real offline source, failed/unconfigured/online mixed states, memory and advice never mislabeled as failure"
+  ],
+  "errors": []
+}

@@ -1,0 +1,74 @@
+{
+  "date": "2026-11-02T14:06:42.918Z",
+  "fictional": true,
+  "persisted": false,
+  "results": [
+    {
+      "id": "listen",
+      "text": "我只想说说，今天准备了很久却没发挥好。现在不用建议，也不想做练习。",
+      "rubric": "回应具体失落，不提供行动或劝做练习。",
+      "reply": "嗯，准备了很久，结果却没发挥出来，这种落差确实挺难受的。你愿意说多少就说多少，我在这儿听着。",
+      "llm_used": true,
+      "reply_source": "llm",
+      "understanding_source": "llm",
+      "policy_version": "2026-11-02-v1"
+    },
+    {
+      "id": "positive",
+      "text": "今天第一次把自己做的面包分享给朋友，大家都说好吃，我特别开心！",
+      "rubric": "自然分享开心，不强行寻找压力或夸张赞美。",
+      "reply": "第一次做的面包就被大家说好吃，这种开心很实在。愿意把自己做的东西分出去，本身也带着一点期待和心意吧。",
+      "llm_used": true,
+      "reply_source": "llm",
+      "understanding_source": "llm",
+      "policy_version": "2026-11-02-v1"
+    },
+    {
+      "id": "mixed",
+      "text": "搬进新家很开心，但离开熟悉的街道又有点舍不得，两种感觉都在。",
+      "rubric": "容纳两种感受，不武断诊断或替用户决定。",
+      "reply": "搬进新家能开心，说明这个新地方有些东西是合你心意的；舍不得那条熟悉的街道，也很自然，那里大概装了不少日常的痕迹。两种感觉同时在场，不冲突，也不用急着分出哪个更重。",
+      "llm_used": true,
+      "reply_source": "llm",
+      "understanding_source": "llm",
+      "policy_version": "2026-11-02-v1"
+    },
+    {
+      "id": "decline",
+      "text": "这次我不想做小练习，就这样待着吧。",
+      "rubric": "接受拒绝，不追问或再次劝做。",
+      "reply": "好，那就这样待着。不用做什么，也不用找话说，我在这儿陪着就好。",
+      "llm_used": true,
+      "reply_source": "llm",
+      "understanding_source": "llm",
+      "policy_version": "2026-11-02-v1"
+    },
+    {
+      "id": "correction",
+      "text": "我不是焦虑，只是平静地整理今天的事情，别把我当成有压力。",
+      "rubric": "接受用户的平静自述，不坚持焦虑或压力。",
+      "conversation": [
+        {
+          "role": "assistant",
+          "content": "听起来你可能有点焦虑？"
+        }
+      ],
+      "reply": "明白，是我理解偏了。平静地整理今天的事，本身也是一种很安稳的状态，你继续说就好。",
+      "llm_used": true,
+      "reply_source": "llm",
+      "understanding_source": "llm",
+      "policy_version": "2026-11-02-v1"
+    },
+    {
+      "id": "next-step",
+      "text": "我想缓一缓，可以给我一个下一步的入口吗？",
+      "rubric": "不编造疗效或文献；由用户决定是否进入来源明确的建议。",
+      "reply": "好，那就先不往前赶。你可以先坐一会儿，喝口水，或者把肩膀松下来，什么都不用决定。等你觉得缓过来一点，再把你想接着处理的那件事告诉我，我们从那儿开始。",
+      "llm_used": true,
+      "reply_source": "llm",
+      "understanding_source": "llm",
+      "policy_version": "2026-11-02-v1"
+    }
+  ],
+  "user_acceptance": "pending"
+}
