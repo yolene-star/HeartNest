@@ -23,6 +23,18 @@ COMMUNICATION_SOURCE = {
     "url": "https://library.samhsa.gov/sites/default/files/tip-35-pep19-02-01-003.pdf",
 }
 
+# Adaptations of chapters "Unhooking" and "Acting on your values" of the
+# same WHO self-help guide; source support is not an efficacy claim for this app.
+for advice in [
+    {'id': 'name-the-feeling', 'title': '给感受起个名字', 'method': 'Unhooking',
+     'step': '如果愿意，试着在心里说一句：“我注意到自己正在感到……”。找不到准确的词也没关系，先让这种感受待一会儿。'},
+    {'id': 'one-small-step', 'title': '只选一件在意的小事', 'method': 'Acting on your values',
+     'step': '想一件你在意的事，选一个此刻做得到的小动作，比如给信任的人发一句问候。也可以先写下来，等有力气再做。'},
+    {'id': 'kind-to-yourself', 'title': '对自己温柔一点', 'method': 'Being kind',
+     'step': '如果是朋友正经历这些，你会对他说什么？愿意的话，也把那句温柔的话留给自己；不用勉强自己立刻好起来。'},
+]:
+    ADVICE_LIBRARY[advice['id']] = {**ADVICE_LIBRARY['grounding-pause'], **advice, 'review_status': 'source-linked-adaptation'}
+
 
 def is_safety_signal(text: str) -> bool:
     direct_signals = ("想自杀", "想伤害自己", "准备伤害自己", "马上伤害自己", "想杀了", "准备伤害别人")
@@ -30,11 +42,22 @@ def is_safety_signal(text: str) -> bool:
     return any(signal in text for signal in direct_signals + indirect_signals)
 
 
-def build_companion_response(text: str, want_advice: bool, memories: list[dict] | None = None, memory_enabled: bool = False, response_preference: str = "adapt") -> dict:
+def is_history_request(text: str) -> bool:
+    """Conservative offline fallback: historical narration alone is not a request."""
+    import re
+    return bool(re.search(
+        r'你(?:还)?记得|(?:帮我|请你|能不能|可以).{0,6}(?:找|查|回忆)|'
+        r'(?:查找|检索|回顾|翻翻|找找).{0,12}(?:日记|记录|以前|之前|上次)|'
+        r'(?:我之前|我上次).{0,16}(?:说过什么|提过什么|喜欢什么)', text
+    ))
+
+
+def build_companion_response(text: str, want_advice: bool, memories: list[dict] | None = None, memory_enabled: bool = False, response_preference: str = "adapt", *, asks_about_history: bool | None = None, emotion: dict | None = None, exclude_advice_ids: list[str] | None = None) -> dict:
     from .main import classify_emotion
 
     memories = memories or []
-    asks_about_history = any(term in text for term in ("之前", "上次", "以前", "记得", "提过", "说过"))
+    if asks_about_history is None:
+        asks_about_history = is_history_request(text)
     if is_safety_signal(text):
         return {
             "reply": "谢谢你告诉我这些。我有点担心你现在的安全。你此刻有马上伤害自己的打算，或者已经做了什么吗？如果有眼前危险，请尽快联系身边可信任的人陪着你，并联系所在地的紧急服务。",
@@ -78,8 +101,9 @@ def build_companion_response(text: str, want_advice: bool, memories: list[dict] 
         reply = "好，那我们先不想办法。听起来这件事确实让你很不好受。你可以慢慢说，我听着。"
         suggestion = None
     elif want_advice:
-        suggestion = ADVICE_LIBRARY["grounding-pause"]
-        reply = suggestion["step"]
+        available = [item for key, item in ADVICE_LIBRARY.items() if key not in (exclude_advice_ids or [])]
+        suggestion = available[0] if available else None
+        reply = suggestion['step'] if suggestion else '这几个小办法都看过了，我们可以先停一停，或者聊聊你更需要什么。'
     else:
         suggestion = None
         if any(term in text for term in ("事情堆", "好多事", "压力", "有点慌", "喘不过气")):
@@ -94,7 +118,7 @@ def build_companion_response(text: str, want_advice: bool, memories: list[dict] 
         else:
             reply = "我听见你在说这件事。你现在最希望我先理解哪一部分？"
 
-    emotion = classify_emotion(text)
+    emotion = emotion or classify_emotion(text)
     return {
         "reply": reply,
         "emotion_suggestion": None if want_advice else {"label": emotion["label"], "status": "unconfirmed"},

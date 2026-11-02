@@ -18,8 +18,9 @@ from pydantic import BaseModel, Field, ConfigDict
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from .content import ADVICE_LIBRARY, build_companion_response
-from .llm import request_llm_reply
+from .content import ADVICE_LIBRARY, build_companion_response, is_history_request, is_safety_signal
+from .llm import request_llm_reply, request_llm_understanding, llm_reply_mode
+from .communication import COMMUNICATION_POLICY_VERSION
 
 app = FastAPI(title="个性化情绪陪伴工具 API", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -73,8 +74,12 @@ class DiaryIn(BaseModel):
     emotion_label: Literal['开心','平静','疲惫','低落','焦虑','生气','混合/说不清','其他','积极','平稳'] | None = None
     recorded_at: str | None = None
 
+
 class DiaryPatch(BaseModel):
     text: str | None = Field(default=None, min_length=1)
+    allow_retrieval: bool | None = None
+    recorded_at: str | None = None
+
 
 class DiaryAddendumIn(BaseModel):
     text: str = Field(min_length=1)
@@ -105,6 +110,7 @@ class FeedbackIn(BaseModel):
     recommendation_id: str
     action: Literal['accept','reject','modify','experienced']
     experience: str = ""
+    remember_preference: bool = False
 
 class SettingsIn(BaseModel):
     memory_enabled: bool | None = None
@@ -118,15 +124,19 @@ class EmotionPatch(BaseModel):
     label: Literal['开心','平静','疲惫','低落','焦虑','生气','混合/说不清','其他','积极','平稳'] | None = None
     status: Literal['confirmed','skipped'] = 'confirmed'
 
+CHAT_TEXT_LIMIT = 4000
+
+
 class ConversationTurn(BaseModel):
     role: Literal['user','assistant']
-    content: str = Field(min_length=1, max_length=2000)
+    content: str = Field(min_length=1, max_length=CHAT_TEXT_LIMIT)
 
 class CompanionIn(BaseModel):
-    text: str = Field(min_length=1, max_length=4000)
+    text: str = Field(min_length=1, max_length=CHAT_TEXT_LIMIT)
     want_advice: bool = False
     response_preference: Literal['listen_first','think_together','adapt'] = 'adapt'
     conversation: list[ConversationTurn] = Field(default_factory=list, max_length=6)
+    exclude_advice_ids: list[str] = Field(default_factory=list, max_length=20)
 
 
 def now_iso() -> str:
@@ -168,29 +178,48 @@ def tokenize(text: str) -> set[str]:
     return tokens
 
 
+def understand_text(text: str, conversation: list[dict[str, str]] | None = None) -> dict[str, Any]:
+    understanding = None if is_safety_signal(text) else request_llm_understanding(text, conversation)
+    if understanding is not None:
+        return {
+            'emotion': {'label': understanding['label'], 'confidence': understanding['confidence'],
+                        'analysis_source': 'llm', 'reason': understanding['reason']},
+            'intent': understanding['intent'], 'memory_query': understanding['memory_query'],
+            'source': 'llm',
+        }
+    return {'emotion': {**classify_emotion(text), 'analysis_source': 'rules', 'reason': '本地关键词初判，仅供参考。'},
+            'intent': 'recall' if is_history_request(text) else 'share', 'memory_query': text, 'source': 'rules'}
+
+
 def memory_search(query: str, top_k: int = 5) -> list[dict[str, Any]]:
     if not SETTINGS["memory_enabled"]:
         return []
-    candidates: list[dict[str, Any]] = []
-    for item in DIARIES:
-        if not item.get("allow_retrieval", True):
-            continue
-        searchable_text = item["text"]
-        if item.get("response_text"):
-            searchable_text += " " + item["response_text"]
-        candidates.append({"item": item, "text": searchable_text})
-    if not candidates or not query.strip():
+    candidates = [item for item in DIARIES if item.get("allow_retrieval", True)]
+    if not candidates or not tokenize(query):
         return []
-    vectorizer = TfidfVectorizer(analyzer="char", ngram_range=(1, 2))
-    matrix = vectorizer.fit_transform([query, *[candidate["text"] for candidate in candidates]])
-    scores = cosine_similarity(matrix[0:1], matrix[1:]).ravel()
-    ranked = [(float(score), candidate["item"]) for score, candidate in zip(scores, candidates) if score > 0]
+    # Separate original and reply so a saved response cannot dilute an exact match.
+    documents = []
+    owners = []
+    for index, item in enumerate(candidates):
+        for text in (item["text"], item.get("response_text", "")):
+            if text and tokenize(text):
+                documents.append(text)
+                owners.append(index)
+    if not documents:
+        return []
+    vectorizer = TfidfVectorizer(analyzer=tokenize)
+    matrix = vectorizer.fit_transform([query, *documents])
+    similarities = cosine_similarity(matrix[0:1], matrix[1:]).ravel()
+    scores = [0.0] * len(candidates)
+    for owner, score in zip(owners, similarities):
+        scores[owner] = max(scores[owner], float(score))
+    ranked = [(score, item) for score, item in zip(scores, candidates) if score > 0]
     ranked.sort(key=lambda pair: (pair[0], bool(pair[1].get("response_text")), pair[1].get("recorded_at", "")), reverse=True)
     return [{**item, "score": round(score, 3)} for score, item in ranked[:max(1, min(top_k, 20))]]
 
 
 def profile_rejected_text() -> set[str]:
-    return {p["content"] for p in PROFILES if p["status"] == "rejected" or p["type"] == "反感"}
+    return {p["content"] for p in PROFILES if p.get('confirmed') and (p["status"] == "rejected" or p["type"] == "反感")}
 
 @app.get("/api/health")
 def health():
@@ -200,7 +229,7 @@ def health():
 def create_diary(payload: DiaryIn):
     if not SETTINGS["save_enabled"]:
         raise HTTPException(409, "记录保存已关闭")
-    emotion = {"label": payload.emotion_label, "confidence": 1.0} if payload.emotion_label else classify_emotion(payload.text)
+    emotion = {"label": payload.emotion_label, "confidence": 1.0, "analysis_source": "user"} if payload.emotion_label else understand_text(payload.text)['emotion']
     status = "confirmed" if payload.emotion_label else "pending"
     item = {"id": uuid.uuid4().hex[:10], "kind": payload.kind, "text": payload.text, "mode": payload.mode, "allow_retrieval": payload.allow_retrieval, "response_requested": payload.response_requested, "response_text": payload.response_text, "response_created_at": now_iso() if payload.response_text else None, "emotion": emotion, "emotion_confirmed": bool(payload.emotion_label), "emotion_status": status, "addenda": [], "recorded_at": payload.recorded_at or now_iso(), "updated_at": None}
     DIARIES.append(item)
@@ -210,15 +239,28 @@ def create_diary(payload: DiaryIn):
 @app.post("/api/companion/respond")
 def companion_respond(payload: CompanionIn):
     text = payload.text.strip()
-    asks_about_history = any(term in text for term in ("之前", "上次", "以前", "记得", "提过", "说过"))
-    memories = memory_search(text, 3) if SETTINGS["memory_enabled"] and asks_about_history else []
-    response = build_companion_response(text, payload.want_advice, memories, SETTINGS["memory_enabled"], payload.response_preference)
+    conversation = [turn.model_dump() for turn in payload.conversation]
+    understanding = understand_text(text, conversation)
+    asks_about_history = understanding['intent'] == 'recall'
+    query = understanding['memory_query'] or text
+    memories = memory_search(query, 3) if SETTINGS["memory_enabled"] and asks_about_history and not is_safety_signal(text) else []
+    response = build_companion_response(text, payload.want_advice, memories, SETTINGS["memory_enabled"], payload.response_preference,
+                                        asks_about_history=asks_about_history, emotion=understanding['emotion'], exclude_advice_ids=payload.exclude_advice_ids)
+    response['understanding_source'] = understanding['source']
+    response['communication_policy_version'] = COMMUNICATION_POLICY_VERSION
+    response['intent'] = understanding['intent']
     response["llm_used"] = False
+    response['reply_source'] = 'safety' if response['safety'] else 'memory' if asks_about_history else 'advice' if payload.want_advice else 'rules'
+    response['reply_fallback_reason'] = None
     if not response["safety"] and not payload.want_advice and not asks_about_history:
-        llm_reply = request_llm_reply(text, payload.response_preference, response.get("emotion_suggestion", {}).get("label"), [turn.model_dump() for turn in payload.conversation])
+        mode = llm_reply_mode()
+        llm_reply = request_llm_reply(text, payload.response_preference, understanding['emotion']['label'], conversation)
         if llm_reply:
             response["reply"] = llm_reply
             response["llm_used"] = True
+            response['reply_source'] = 'llm'
+        else:
+            response['reply_fallback_reason'] = 'unavailable' if mode == 'ready' else mode
     return response
 
 @app.get("/api/diaries")
@@ -251,7 +293,7 @@ def update_diary_emotion(diary_id: str, payload: EmotionPatch):
     if not item:
         raise HTTPException(404, "日记不存在")
     if payload.label:
-        item['emotion'] = {'label': payload.label, 'confidence': 1.0}
+        item['emotion'] = {'label': payload.label, 'confidence': 1.0, 'analysis_source': 'user'}
     item['emotion_confirmed'] = payload.status == 'confirmed'
     item['emotion_status'] = payload.status
     return item
@@ -267,7 +309,7 @@ def delete_diary(diary_id: str):
 
 @app.post("/api/analyze/emotion")
 def analyze_emotion(payload: dict[str, str]):
-    return classify_emotion(payload.get("text", ""))
+    return understand_text(payload.get("text", ""))['emotion']
 
 @app.post("/api/memories/search")
 def search_memories(payload: SearchIn):
@@ -326,10 +368,24 @@ def recommendations(payload: RecommendationIn):
             continue
         if payload.budget is not None and activity["cost"] > payload.budget:
             continue
+        if payload.time and payload.time != activity['time']:
+            continue
         score = len(words & tokenize(activity["name"] + activity["type"] + activity["description"]))
-        if payload.time and payload.time in activity["time"]:
-            score += 2
-        candidates.append((score, activity))
+        reasons = []
+        if score:
+            reasons.append('符合当前诉求关键词')
+        activity_words = tokenize(activity['name'] + activity['type'] + activity['description'])
+        for profile in PROFILES:
+            if not profile.get('confirmed') or profile['status'] != 'active' or profile['type'] not in {'喜欢', '想尝试'}:
+                continue
+            if tokenize(profile['content']) & activity_words:
+                score += 3 if profile['type'] == '喜欢' else 2
+                reasons.append(f"你确认过的偏好：{profile['content']}")
+        if payload.budget is not None:
+            reasons.append(f"费用不超过 {payload.budget:g} 元")
+        if payload.time:
+            reasons.append(f"时间符合：{payload.time}")
+        candidates.append((score, {**activity, 'reasons': reasons or ['符合筛选条件的模拟活动']}))
     candidates.sort(key=lambda x: x[0], reverse=True)
     return {"items": [item for _, item in candidates[:3]], "explanation": "根据当前诉求、预算、时间和已记录偏好筛选"}
 
@@ -338,14 +394,28 @@ def save_feedback(payload: FeedbackIn):
     activity = next((x for x in ACTIVITIES if x['id'] == payload.recommendation_id), None)
     if activity is None and payload.recommendation_id not in ADVICE_LIBRARY:
         raise HTTPException(404, '建议不存在')
+    if payload.remember_preference and (activity is None or payload.action == 'modify'):
+        raise HTTPException(422, '只有活动的接受、拒绝或体验反馈可以确认成偏好')
     record = {"id": uuid.uuid4().hex[:10], **payload.model_dump(), "created_at": now_iso()}
     FEEDBACK.append(record)
+    if payload.remember_preference:
+        # A one-off rejection never becomes a long-term dislike without consent.
+        content = activity['type'] if payload.action == 'reject' else activity['name']
+        profile = next((item for item in PROFILES if item['content'] == content), None)
+        values = {'content': content, 'type': {'accept': '想尝试', 'reject': '反感', 'experienced': '已体验'}[payload.action],
+                  'status': 'rejected' if payload.action == 'reject' else 'active', 'confirmed': True,
+                  'source_feedback_id': record['id'], 'updated_at': now_iso()}
+        if profile is None:
+            profile = {'id': uuid.uuid4().hex[:10], 'source_id': None, 'created_at': now_iso()}
+            PROFILES.append(profile)
+        profile.update(values)
+        record['profile_id'] = profile['id']
     return record
 
 @app.get("/api/metrics/emotions")
 def emotion_metrics(days: int = 7):
     days = max(1, min(days, 90))
-    cutoff = date.today().fromordinal(date.today().toordinal() - days + 1).isoformat()
+    cutoff = date.fromordinal(date.today().toordinal() - days + 1).isoformat()
     counts: dict[str, int] = {}
     for item in DIARIES:
         if not item.get("emotion_confirmed") or item["recorded_at"][:10] < cutoff:
