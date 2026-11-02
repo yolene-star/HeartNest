@@ -320,6 +320,7 @@ body{background:#eef0ea}
 .flexible-profile textarea { min-height: 90px; resize: vertical; }
 .flexible-profile > p { line-height: 1.6; }
 
+.companion-view[hidden] { display: none !important; }
 .advice-history:empty { display: none; }
 .advice-history article { padding: 10px 0; margin-bottom: 12px; border-bottom: 1px dashed #c8d3bf; }
 .advice-history small { color: #66735d; }

@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "checks": [
+    "conversation, reply and draft survive all navigation destinations",
+    "relaxation and quiet entry/exit keep conversation without adding operational notices",
+    "drawer actions stay silent; activity and advice shortcuts insert user requests",
+    "alternative advice preserves original title/steps and rejection remains after navigation",
+    "reply arriving while another page is open remains in original conversation"
+  ],
+  "errors": []
+}

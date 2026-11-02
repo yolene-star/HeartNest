@@ -105,7 +105,7 @@ function ProductApp() {
       <div className="notebook-page-content">
       {error && <div className="inline-alert error-alert" role="alert">{error}<button onClick={() => { setError(''); refresh().catch(() => setError('服务仍不可用，请稍后重试。')) }}>重试</button></div>}
       {notice && <div className="inline-alert success-alert" role="status">{notice}<button aria-label="关闭提示" onClick={() => setNotice('')}>收起</button></div>}
-      {page === '陪伴' && <CompanionPage quiet={quiet} setQuiet={setQuiet} petMood={petMood} pet={currentPet} nickname={settings.nickname} responsePreference={settings.response_preference} diaries={diaries} memoryEnabled={settings.memory_enabled} saveEnabled={settings.save_enabled} setPetMood={setPetMood} setNotice={setNotice} onDiarySaved={refresh} onOpenDiaries={openDiary} />}
+      <CompanionPage active={page === '陪伴'} quiet={quiet} setQuiet={setQuiet} petMood={petMood} pet={currentPet} nickname={settings.nickname} responsePreference={settings.response_preference} diaries={diaries} memoryEnabled={settings.memory_enabled} saveEnabled={settings.save_enabled} setPetMood={setPetMood} setNotice={setNotice} onDiarySaved={refresh} onOpenDiaries={openDiary} />
       {page === '日记' && <div className="diary-workspace"><header className="page-heading nature-diary-heading"><div><p className="eyebrow">{diaryView === 'write' ? '留一页给现在的自己' : '把心情放回时间里'}</p><h1>{diaryView === 'write' ? '写一篇日记' : diaryView === 'read' ? '这一页的心情' : '我的心情日记'}</h1><p>{diaryView === 'write' ? '慢慢写，只留下你想留下的。' : diaryView === 'read' ? '把那一天，轻轻翻开。' : '平稳的日子，也值得记下来。'}</p></div>{diaryView === 'write' ? <button className="secondary-button" onClick={() => setDiaryView('list')}>返回日记列表</button> : <button className="primary-button" onClick={startDiary}>＋ 写日记</button>}</header>{diaryView === 'read' && <div className="diary-reading-back"><button className="text-link" onClick={() => setDiaryView('calendar')}>← 返回心情日历</button></div>}{!['write', 'read'].includes(diaryView) && <div className="diary-tabs" role="tablist" aria-label="日记视图"><button role="tab" aria-selected={diaryView === 'calendar'} onClick={() => setDiaryView('calendar')}>心情日历</button><button role="tab" aria-selected={diaryView === 'list'} onClick={() => setDiaryView('list')}>日记列表</button></div>}{diaryView === 'calendar' ? <NatureCalendar request={request} state={calendarState} onStateChange={setCalendarState} onOpenDiary={id => openDiary(id, true)} onWrite={startDiary} /> : <DiaryPage view={diaryView} onCreated={openDiary} openVersion={diaryOpenVersion} initialId={diaryTarget} diaries={diaries} saveEnabled={settings.save_enabled} responsePreference={settings.response_preference} onRefresh={refresh} />}</div>}
 
       {page === '回顾' && <ReviewPage metrics={metrics} diaries={diaries} onOpenDiary={openDiary} />}
@@ -163,7 +163,7 @@ function Onboarding({ onComplete }) {
   </div>
 }
 
-function CompanionPage({ quiet, setQuiet, petMood, pet, nickname, responsePreference, diaries, memoryEnabled, saveEnabled, setPetMood, setNotice, onDiarySaved, onOpenDiaries }) {
+function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, responsePreference, diaries, memoryEnabled, saveEnabled, setPetMood, setNotice, onDiarySaved, onOpenDiaries }) {
   const [chat, setChat] = useState([])
   const openDiaryFromChat = onOpenDiaries
   const [toolsOpen, setToolsOpen] = useState(false)
@@ -176,6 +176,9 @@ function CompanionPage({ quiet, setQuiet, petMood, pet, nickname, responsePrefer
   const [quietChatOpen, setQuietChatOpen] = useState(false)
   const quietEntry = useRef(null)
   const [relaxationOpen, setRelaxationOpen] = useState(false)
+  useEffect(() => {
+    if (!active) { setToolsOpen(false); setRelaxationOpen(false); setQuiet(false); setQuietChatOpen(false) }
+  }, [active, setQuiet])
   const relaxationInvited = useRef(false)
   const focusComposer = () => requestAnimationFrame(() => composerInput.current?.focus({ preventScroll: true }))
   const dismissInvitation = id => setChat(items => items.map(item => item.id === id ? { ...item, relaxationInvitation: false } : item))
@@ -203,7 +206,7 @@ function CompanionPage({ quiet, setQuiet, petMood, pet, nickname, responsePrefer
   useEffect(() => {
     const scroll = messagesEnd.current?.parentElement
     scroll?.scrollTo({ top: scroll.scrollHeight, behavior: 'smooth' })
-  }, [chat])
+  }, [chat, active])
 
   const send = async (text = draft, wantAdvice = false, retryJob = null, displayText = null, excludeAdviceIds = []) => {
     const content = (retryJob?.text ?? text).trim()
@@ -280,7 +283,7 @@ function CompanionPage({ quiet, setQuiet, petMood, pet, nickname, responsePrefer
   }
   const saveTurn = turn => { return persistTurn(chat.find(item => item.id === turn.userId), saveReply ? turn.text : null) }
 
-  return <div className={`companion-view ${quiet ? 'quiet-mode' : ''} ${quietChatOpen ? 'quiet-chat-open' : ''}`}>
+  return <div hidden={!active} className={`companion-view ${quiet ? 'quiet-mode' : ''} ${quietChatOpen ? 'quiet-chat-open' : ''}`}>
     {!quiet && <button type="button" className="companion-bookmark" aria-label="打开陪伴工具" aria-haspopup="dialog" aria-expanded={toolsOpen} aria-controls={toolsOpen ? 'companion-tools-drawer' : undefined} onClick={() => setToolsOpen(true)}><svg viewBox="0 0 24 28" aria-hidden="true"><path d="M4 2h16v24l-8-5-8 5Z"/><path d="M8 9h8M8 13h8"/></svg><span>工具</span></button>}
     {toolsOpen && !quiet && <CompanionToolsDrawer onClose={() => setToolsOpen(false)}><section className="drawer-shortcuts"><p className="eyebrow">想从哪里开始？</p><button type="button" className="secondary-button" disabled={sending} onClick={() => { setToolsOpen(false); send(ACTIVITY_PROMPT) }}>一起找个小活动</button><button type="button" className="secondary-button" onClick={() => { setToolsOpen(false); setRelaxationOpen(true) }}>想放松一下</button><button type="button" className="secondary-button" onClick={() => { setToolsOpen(false); setQuietChatOpen(false); setQuiet(true) }}>陪我待会儿</button></section><CompanionTools diaries={diaries} memoryEnabled={memoryEnabled} onOpenDiaries={id => { setToolsOpen(false); openDiaryFromChat(id) }} /></CompanionToolsDrawer>}
     {relaxationOpen && <RelaxationChoice busy={sending} onDismiss={() => { setRelaxationOpen(false) }} onChat={() => { setRelaxationOpen(false); focusComposer() }} onLake={() => { setRelaxationOpen(false); setQuietChatOpen(false); setQuiet(true) }} onPractice={() => { setRelaxationOpen(false); focusComposer(); send('我现在想放松一下，请给我一个简单的练习。', true) }} />}
