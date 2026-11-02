@@ -16,6 +16,7 @@ from difflib import SequenceMatcher
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -23,6 +24,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from .content import ADVICE_LIBRARY, build_companion_response, is_history_request, is_safety_signal
 from .llm import request_llm_reply, request_llm_understanding, llm_reply_mode
 from .communication import COMMUNICATION_POLICY_VERSION
+from .public_demo import DemoSessions, SESSION_COOKIE, SESSION_TTL
 
 app = FastAPI(title="个性化情绪陪伴工具 API", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -39,25 +41,52 @@ SETTINGS = {
     "pet_id": "otter",
     "onboarding_complete": False,
 }
+DEFAULT_SETTINGS = SETTINGS.copy()
+PUBLIC_DEMO = os.environ.get('PUBLIC_DEMO', '').lower() == 'true'
 DB_PATH = Path(os.environ.get('COMPANION_DB', str(Path(__file__).resolve().parents[2] / 'data/runtime/companion.sqlite3')))
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 with sqlite3.connect(DB_PATH) as db:
     db.execute('CREATE TABLE IF NOT EXISTS state (id INTEGER PRIMARY KEY, payload TEXT NOT NULL)')
     stored = db.execute('SELECT payload FROM state WHERE id=1').fetchone()
-    if stored:
+    if stored and not PUBLIC_DEMO:
         state = json.loads(stored[0])
         DIARIES[:] = state['diaries']
         PROFILES[:] = state['profiles']
         FEEDBACK[:] = state['feedback']
         SETTINGS.update(state['settings'])
 state_lock = asyncio.Lock()
+demo_sessions = DemoSessions(DB_PATH) if PUBLIC_DEMO else None
 
 @app.middleware('http')
 async def persist_state(request, call_next):
     # One worker serializes read/modify/write. SQLite commits snapshots atomically.
     async with state_lock:
+        if PUBLIC_DEMO and request.url.path.startswith('/api/') and request.url.path != '/api/health':
+            try:
+                token, state = demo_sessions.load(request.cookies.get(SESSION_COOKIE))
+            except OverflowError as exc:
+                return JSONResponse({'detail': str(exc)}, status_code=503)
+            state = state or {}
+            DIARIES[:] = state.get('diaries', [])
+            PROFILES[:] = state.get('profiles', [])
+            FEEDBACK[:] = state.get('feedback', [])
+            SETTINGS.clear()
+            SETTINGS.update({**DEFAULT_SETTINGS, **state.get('settings', {})})
+            PROFILE_PROPOSALS.clear()
+            PROFILE_PROPOSALS.update(demo_sessions.proposals_for(token))
+            response = await call_next(request)
+            if response.status_code < 400:
+                try:
+                    demo_sessions.save(token, {'diaries': DIARIES, 'profiles': PROFILES,
+                        'feedback': FEEDBACK, 'settings': SETTINGS}, PROFILE_PROPOSALS)
+                except OverflowError as exc:
+                    return JSONResponse({'detail': str(exc)}, status_code=413)
+                response.set_cookie(SESSION_COOKIE, token, max_age=SESSION_TTL,
+                    httponly=True, samesite='lax', secure=request.headers.get('x-forwarded-proto') == 'https')
+            response.headers['Cache-Control'] = 'no-store'
+            return response
         response = await call_next(request)
-        if request.method in {'POST', 'PATCH', 'DELETE'} and response.status_code < 400:
+        if not PUBLIC_DEMO and request.method in {'POST', 'PATCH', 'DELETE'} and response.status_code < 400:
             payload = json.dumps({'diaries': DIARIES, 'profiles': PROFILES, 'feedback': FEEDBACK, 'settings': SETTINGS}, ensure_ascii=False)
             with sqlite3.connect(DB_PATH) as db:
                 db.execute('INSERT OR REPLACE INTO state(id,payload) VALUES(1,?)', (payload,))
@@ -350,6 +379,8 @@ def profile_rejected_text() -> set[str]:
 
 @app.get("/api/health")
 def health():
+    if PUBLIC_DEMO:
+        return {'status': 'ok', 'public_demo': True}
     return {"status": "ok", "diaries": len(DIARIES), "profiles": len(PROFILES)}
 
 @app.post("/api/diaries")
@@ -481,7 +512,7 @@ def delete_profile(profile_id: str):
 def get_settings():
     if SETTINGS.get("pet_id") == "cloud":
         SETTINGS["pet_id"] = "rabbit"
-    return SETTINGS
+    return {**SETTINGS, 'public_demo': True} if PUBLIC_DEMO else SETTINGS
 
 @app.patch("/api/settings")
 def update_settings(payload: SettingsIn):
