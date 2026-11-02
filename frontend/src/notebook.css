@@ -324,6 +324,9 @@ body{background:#eef0ea}
 .advice-history:empty { display: none; }
 .advice-history article { padding: 10px 0; margin-bottom: 12px; border-bottom: 1px dashed #c8d3bf; }
 .advice-history small { color: #66735d; }
+.public-demo-notice { flex:0 0 auto; margin:0 0 8px; color:#465344; font-size:12px; }
+.public-demo-notice summary { cursor:pointer; padding:4px 0; }
+.public-demo-notice p { margin:4px 0 8px; max-width:70ch; line-height:1.6; }
 .advice-history h4 { margin: 6px 0; }
 
 @media(max-width:1100px) {

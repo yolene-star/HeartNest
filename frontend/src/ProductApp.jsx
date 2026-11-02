@@ -62,8 +62,10 @@ function ProductApp() {
   }, [page, diaryView, diaryOpenVersion])
 
   const refresh = useCallback(async () => {
-    const [diaryResult, profileResult, settingsResult, metricsResult] = await Promise.all([
-      request('/diaries'), request('/profile'), request('/settings'), request('/metrics/emotions?days=7'),
+    // Establish the public visitor cookie before issuing parallel data requests.
+    const settingsResult = await request('/settings')
+    const [diaryResult, profileResult, metricsResult] = await Promise.all([
+      request('/diaries'), request('/profile'), request('/metrics/emotions?days=7'),
     ])
     setDiaries(diaryResult.items)
     setProfiles(profileResult.items)
@@ -103,6 +105,7 @@ function ProductApp() {
     <main className={`product-main ${page === '陪伴' ? 'companion-page' : ''}`}>
       <div className="nature-topline"><strong>心栖 · HeartNest</strong><span>心情有处可栖</span></div>
       <div className="notebook-page-content">
+      {settings.public_demo && <details className="public-demo-notice"><summary>公网演示 · 当前浏览器独立数据</summary><p>使用本地规则回应，未接入大模型。请使用虚构内容；浏览器通过 Cookie 识别，闲置 24 小时后失效，过期数据在后续请求时清理。清除 Cookie 后无法找回记录。临时链接需要演示电脑保持在线。</p></details>}
       {error && <div className="inline-alert error-alert" role="alert">{error}<button onClick={() => { setError(''); refresh().catch(() => setError('服务仍不可用，请稍后重试。')) }}>重试</button></div>}
       {notice && <div className="inline-alert success-alert" role="status">{notice}<button aria-label="关闭提示" onClick={() => setNotice('')}>收起</button></div>}
       <CompanionPage active={page === '陪伴'} quiet={quiet} setQuiet={setQuiet} petMood={petMood} pet={currentPet} nickname={settings.nickname} responsePreference={settings.response_preference} diaries={diaries} memoryEnabled={settings.memory_enabled} saveEnabled={settings.save_enabled} setPetMood={setPetMood} setNotice={setNotice} onDiarySaved={refresh} onOpenDiaries={openDiary} />

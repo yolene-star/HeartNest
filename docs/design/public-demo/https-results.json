@@ -1,0 +1,11 @@
+{
+  "base": "https://capacity-closely-restricted-operation.trycloudflare.com",
+  "checks": [
+    "real onboarding and independent cookie-backed settings",
+    "actual rules response, nickname proposal and explicit confirmation",
+    "two browser contexts isolated; foreign diary deletion rejected; narrow tools and fixed layout",
+    "real HTTPS, Secure HttpOnly SameSite cookie, browser reload persistence",
+    "navigation retains chat; reload retains authorized data; demo diary deletion works; no JS errors"
+  ],
+  "errors": []
+}

@@ -1,0 +1,10 @@
+{
+  "base": "http://127.0.0.1:18081",
+  "checks": [
+    "real onboarding and independent cookie-backed settings",
+    "actual rules response, nickname proposal and explicit confirmation",
+    "two browser contexts isolated; foreign diary deletion rejected; narrow tools and fixed layout",
+    "navigation retains chat; reload retains authorized data; demo diary deletion works; no JS errors"
+  ],
+  "errors": []
+}
