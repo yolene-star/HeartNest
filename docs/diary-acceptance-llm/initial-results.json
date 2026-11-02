@@ -1,0 +1,177 @@
+{
+  "mode": "docker-live-llm",
+  "started_at": "2026-11-02T06:39:45.619Z",
+  "checks": [
+    {
+      "name": "8 diary texts and dates preserved",
+      "passed": true
+    },
+    {
+      "name": "positive diary recognition",
+      "passed": false,
+      "error": "{\"source_id\":\"synthetic-008\",\"id\":\"a3850b6546\",\"expected\":\"积极\",\"predicted\":\"平稳\",\"analysis_source\":\"llm\",\"reason\":\"文本明确说没有激烈兴奋，更像平稳的期待和对日常的喜欢；虽有轻松愉悦与期待，但整体是温和、稳定的正向状态。\",\"intent\":\"share\",\"understanding_source\":\"llm\",\"reply\":\"听你这样说，能感觉到一种很安稳的轻，不是刻意放下的那种，而是允许事情慢慢发生、也允许自己慢慢跟上。你没有急着责怪课堂上的卡顿，也没有急着把快乐变成什么成果，只是认真留意到它正在发生，这本身就很珍贵。周末的展和那几分钟的聊天，像是给日常留了几处可以呼吸的地方。这种轻的感觉，你想再多说一点吗？\",\"llm_used\":true,\"date\":\"2026-11-11\"}"
+    },
+    {
+      "name": "all diary emotions match reviewed meaning",
+      "passed": false,
+      "error": "Mismatched samples: synthetic-002, synthetic-004, synthetic-005, synthetic-008\n\n4 !== 0\n"
+    },
+    {
+      "name": "diary narration is not treated as a history request",
+      "passed": true
+    },
+    {
+      "name": "all analyses and replies actually use llm",
+      "passed": false,
+      "error": "The expression evaluated to a falsy value:\n\n  assert(result.samples.every(item => item.analysis_source === 'llm' && item.understanding_source === 'llm' && item.llm_used))\n"
+    },
+    {
+      "name": "calendar uses confirmed labels",
+      "passed": true
+    },
+    {
+      "name": "related memory contains source and date",
+      "passed": true
+    },
+    {
+      "name": "unrelated memory is empty",
+      "passed": true
+    },
+    {
+      "name": "memory off prevents citations",
+      "passed": true
+    },
+    {
+      "name": "browser can share happiness with llm",
+      "passed": true
+    },
+    {
+      "name": "positive calendar and full diary visible",
+      "passed": true
+    },
+    {
+      "name": "edit and addendum persist after reload",
+      "passed": true
+    },
+    {
+      "name": "mobile calendar fits viewport",
+      "passed": true
+    },
+    {
+      "name": "deleted diary leaves search and calendar",
+      "passed": true
+    },
+    {
+      "name": "no browser exceptions",
+      "passed": true
+    }
+  ],
+  "samples": [
+    {
+      "source_id": "synthetic-001",
+      "id": "9c213293de",
+      "expected": "焦虑",
+      "predicted": "焦虑",
+      "analysis_source": "llm",
+      "reason": "通篇围绕截止日期、演示出错和“来不及”的紧张，虽拆任务后略有缓和，但明确说现在还是焦虑，主导感受为焦虑。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "听起来这一天过得很不容易，但你在焦虑里慢慢摸到了它的轮廓——从“来不及”变成一件件可以看清的小事，这本身就挺不容易的。现在这种带着形状的焦虑，虽然还在，好像也没那么压人了。明天那第二块，你心里大概已经有数了吧？",
+      "llm_used": true,
+      "date": "2026-10-28"
+    },
+    {
+      "source_id": "synthetic-002",
+      "id": "91cae84d62",
+      "expected": "低落",
+      "predicted": "开心",
+      "analysis_source": "rules",
+      "reason": "本地关键词初判，仅供参考。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "听到你说“解释自己的状态很累”，我好像能看见你停在输入框前的那几秒，安静得有点发沉。后来你调暗灯、倒热水、写下吃好饭和洗好衣服，那种“没有被这一天丢下”的感觉，其实挺珍贵的。今晚不想说话也没关系，我在这儿陪一会儿，你不用急着把空落落讲清楚。",
+      "llm_used": true,
+      "date": "2026-10-30"
+    },
+    {
+      "source_id": "synthetic-003",
+      "id": "df54434d7e",
+      "expected": "疲惫",
+      "predicted": "疲惫",
+      "analysis_source": "llm",
+      "reason": "全文虽提到短暂开心，但夜间身体先停下、肩紧眼酸、嫌音乐吵，并意识到积极背后是害怕看见疲惫，主导状态是透支和累。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "你描述的那种“每完成一件就短暂开心一下”，听起来像是靠不断做事来确认自己可靠；可到晚上，身体先替你按下了暂停，肩膀和眼睛都在说今天已经装得太满了。删掉那条消息时的内疚和轻松同时存在，反而说明你在认真听自己的限度，而不是在敷衍朋友。明天只留最重要的一件事，这个念头本身就挺稳的。此刻你更想先让身体松一松，还是把这份“够多了”的感觉再多说一点？",
+      "llm_used": true,
+      "date": "2026-11-01"
+    },
+    {
+      "source_id": "synthetic-004",
+      "id": "4a818079b1",
+      "expected": "混合/说不清",
+      "predicted": "焦虑",
+      "analysis_source": "rules",
+      "reason": "本地关键词初判，仅供参考。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "事情一下子挤过来，确实容易让人觉得慌。现在最占你心思的是哪一件？",
+      "llm_used": false,
+      "date": "2026-11-03"
+    },
+    {
+      "source_id": "synthetic-005",
+      "id": "785d6be880",
+      "expected": "低落",
+      "predicted": "开心",
+      "analysis_source": "rules",
+      "reason": "本地关键词初判，仅供参考。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "期待落空的那种空落感是真实的，别人说“下次再约”也替代不了你为它腾出时间时的那份心情。你没有逼自己把空出来的一天填满意义，只是去走一圈、买个面包，这本身就很温柔。河边的风和树影没有让难过立刻消失，但它们陪你度过了这段没被安排的时间。",
+      "llm_used": true,
+      "date": "2026-11-05"
+    },
+    {
+      "source_id": "synthetic-006",
+      "id": "4f7a5198ca",
+      "expected": "平稳",
+      "predicted": "平稳",
+      "analysis_source": "llm",
+      "reason": "日常起伏很小，虽有疲惫和轻微烦躁，但明确总结为平稳、轻满足，无显著开心或难过，主导状态是平稳。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "你把这根起伏很小的线描得很清楚，连热饮刚好合口味、便签只留三件事这样的细节都收进来了，读着有种轻轻的安稳。平稳不是空白，你愿意这样回头看它，本身就已经是一种变化了。",
+      "llm_used": true,
+      "date": "2026-11-07"
+    },
+    {
+      "source_id": "synthetic-007",
+      "id": "b35cdde66d",
+      "expected": "开心",
+      "predicted": "开心",
+      "analysis_source": "llm",
+      "reason": "完成拖延的展示页面并获同学肯定，感到放松、满足和“做到了”的开心；虽不夸张但积极感受明确，无要求检索。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "听你这么说，我也跟着松了口气——那种肩膀落下来、心里亮起一小块的感觉，比很响亮的开心更让人珍惜。你这次没有立刻赶去下一件事，而是走了走、买了喜欢的水果，把“做到了”好好放进心里，这本身就很不容易。那块亮一点的地方，现在还在吗？",
+      "llm_used": true,
+      "date": "2026-11-09"
+    },
+    {
+      "source_id": "synthetic-008",
+      "id": "a3850b6546",
+      "expected": "积极",
+      "predicted": "平稳",
+      "analysis_source": "llm",
+      "reason": "文本明确说没有激烈兴奋，更像平稳的期待和对日常的喜欢；虽有轻松愉悦与期待，但整体是温和、稳定的正向状态。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "听你这样说，能感觉到一种很安稳的轻，不是刻意放下的那种，而是允许事情慢慢发生、也允许自己慢慢跟上。你没有急着责怪课堂上的卡顿，也没有急着把快乐变成什么成果，只是认真留意到它正在发生，这本身就很珍贵。周末的展和那几分钟的聊天，像是给日常留了几处可以呼吸的地方。这种轻的感觉，你想再多说一点吗？",
+      "llm_used": true,
+      "date": "2026-11-11"
+    }
+  ],
+  "page_errors": [],
+  "browser_reply": "听你这么说，我也跟着松快起来。展示完成的那一刻能好好停在开心里面，不急着被下一件事拽走，这份变化挺珍贵的。想多听听，今天最让你觉得值得高兴的是哪一刻？"
+}
