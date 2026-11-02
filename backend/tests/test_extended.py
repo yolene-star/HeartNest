@@ -13,7 +13,7 @@ def api(tmp_path, monkeypatch):
 
 def test_restart_and_correction(api):
     d=api.post('/api/diaries',json={'text':'想去甜品店','mode':'respond'}).json()
-    assert d['response']
+    assert d['response'] is None
     assert api.patch(f"/api/diaries/{d['id']}/emotion",json={'label':'平稳','status':'confirmed'}).status_code==200
     import app.main as main
     importlib.reload(main)
@@ -31,7 +31,8 @@ def test_feedback_budget_and_category(api):
     rec=api.post('/api/recommendations',json={'query':'甜品','budget':100,'time':'周末'}).json()['items'][0]
     api.post('/api/feedback',json={'recommendation_id':rec['id'],'action':'reject'})
     items=api.post('/api/recommendations',json={'query':'甜品','budget':100,'time':'周末'}).json()['items']
-    assert all(x['type']!=rec['type'] for x in items)
+    assert api.get('/api/profile').json()['items']==[]
+    assert any(x['type']==rec['type'] for x in items)
     assert api.post('/api/feedback',json={'recommendation_id':'missing','action':'reject'}).status_code==404
     assert api.post('/api/recommendations',json={'budget':-1}).status_code==422
 

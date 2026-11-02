@@ -6,6 +6,11 @@ services:
       dockerfile: backend/Dockerfile
     environment:
       COMPANION_DB: /app/data/runtime/companion.sqlite3
+      LLM_ENABLED: ${LLM_ENABLED:-false}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.deepseek.com}
+      LLM_MODEL: ${LLM_MODEL:-deepseek-flash}
+      LLM_TIMEOUT: ${LLM_TIMEOUT:-18}
+      LLM_API_KEY: ${LLM_API_KEY:-}
     volumes:
       - companion-data:/app/data/runtime
     restart: unless-stopped

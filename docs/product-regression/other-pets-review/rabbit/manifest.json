@@ -1,0 +1,36 @@
+{
+  "source": "docs\\pet-generation\\rabbit-sheet-v4-8x6.png",
+  "sha256": "79afef226442cf80dea22ddd732e166dcd8a3c2fc3036c0b3f848aeb55901cc1",
+  "states": {
+    "idle": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "listening": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "thinking": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "comforting": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "encouraging": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "resting": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    }
+  }
+}

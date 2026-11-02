@@ -1,0 +1,36 @@
+{
+  "source": "docs\\pet-generation\\dog-sheet-v2-8x6.png",
+  "sha256": "c286a2905baf4fbafe4e7a073b2b81f2361252ccb29a5ed9a0e2ebe2dac037c3",
+  "states": {
+    "idle": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "listening": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "thinking": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "comforting": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "encouraging": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "resting": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    }
+  }
+}

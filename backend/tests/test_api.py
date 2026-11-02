@@ -4,8 +4,9 @@ from app.main import app
 client = TestClient(app)
 
 def test_diary_emotion_memory_and_delete_flow():
+    client.patch('/api/settings', json={"memory_enabled":True})
     created = client.post('/api/diaries', json={"kind":"diary","text":"今天很累，但想找点轻松的事情","mode":"respond","allow_retrieval":True}).json()
-    assert created["emotion"]["label"] in {"低落", "平稳", "焦虑", "积极"}
+    assert created["emotion"]["label"] in {"开心", "平静", "疲惫", "低落", "焦虑", "生气", "积极", "平稳"}
     assert created["id"]
     search = client.post('/api/memories/search', json={"query":"累 轻松","top_k":3}).json()
     assert any(item["id"] == created["id"] for item in search["items"])
@@ -13,6 +14,7 @@ def test_diary_emotion_memory_and_delete_flow():
     assert deleted.status_code == 200
     search_after = client.post('/api/memories/search', json={"query":"累 轻松","top_k":3}).json()
     assert all(item["id"] != created["id"] for item in search_after["items"])
+    client.patch('/api/settings', json={"memory_enabled":False})
 
 def test_profile_feedback_updates_status_and_memory_toggle():
     profile = client.post('/api/profile', json={"content":"甜品店","type":"想尝试","status":"active","source_id":None,"confirmed":True}).json()

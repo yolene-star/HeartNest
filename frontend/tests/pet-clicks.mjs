@@ -1,0 +1,17 @@
+import { chromium } from '@playwright/test'
+import assert from 'node:assert/strict'
+const browser = await chromium.launch({ channel: 'msedge', headless: true })
+const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
+await page.addInitScript(() => { localStorage.clear() })
+await page.goto('http://localhost:8080')
+await page.getByRole('button').filter({ hasText: '让 沐沐 陪我' }).click()
+await page.locator('.pet-dock-button').click()
+await page.locator('.write-card textarea').waitFor()
+assert.equal(await page.locator('.section-title h1').textContent(), '把感受放在这里。')
+await page.locator('.side-item').filter({ hasText: '今日' }).click()
+await page.getByRole('button', { name: '和沐沐聊聊' }).click()
+await page.locator('.write-card textarea').waitFor()
+await page.getByRole('button', { name: '更换陪伴伙伴' }).click()
+await page.locator('.pet-picker').waitFor()
+console.log('PASS pet click, chat button, and change button')
+await browser.close()

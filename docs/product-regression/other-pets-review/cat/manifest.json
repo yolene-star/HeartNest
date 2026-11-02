@@ -1,0 +1,36 @@
+{
+  "source": "docs\\pet-generation\\cat-sheet-v2-8x6.png",
+  "sha256": "a48f7a925df63f629b4d0fc601d8e1e0e07827f64234e1b582924e3311c54264",
+  "states": {
+    "idle": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "listening": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "thinking": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "comforting": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "encouraging": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    },
+    "resting": {
+      "keyframes": 8,
+      "loop_frames": 14,
+      "decoded_checks": "passed"
+    }
+  }
+}
