@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
 from calendar import monthrange
 from pathlib import Path
 from typing import Any
@@ -14,7 +14,7 @@ import uuid
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -63,6 +63,28 @@ ACTIVITIES_PATH = Path(__file__).resolve().parents[2] / "data" / "activities.jso
 with ACTIVITIES_PATH.open(encoding="utf-8") as activities_file:
     ACTIVITIES = json.load(activities_file)
 
+BEIJING_TIMEZONE = timezone(timedelta(hours=8))
+
+
+def diary_today() -> date:
+    return datetime.now(BEIJING_TIMEZONE).date()
+
+
+def validate_diary_date(value: str | None) -> str | None:
+    if value is None:
+        return None
+    try:
+        if not re.fullmatch(r'\d{4}-\d{2}-\d{2}(?:T.+)?', value):
+            raise ValueError
+        recorded = datetime.fromisoformat(value)
+        recorded = recorded.replace(tzinfo=BEIJING_TIMEZONE) if recorded.tzinfo is None else recorded.astimezone(BEIJING_TIMEZONE)
+    except ValueError:
+        raise ValueError('请使用有效的日记日期')
+    if recorded.date() > diary_today():
+        raise ValueError('日记日期不能晚于今天（北京时间）')
+    return recorded.isoformat(timespec='seconds')
+
+
 class DiaryIn(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
     kind: Literal['diary','chat'] = 'diary'
@@ -74,12 +96,20 @@ class DiaryIn(BaseModel):
     emotion_label: Literal['开心','平静','疲惫','低落','焦虑','生气','混合/说不清','其他','积极','平稳'] | None = None
     recorded_at: str | None = None
 
+    @field_validator('recorded_at')
+    @classmethod
+    def check_recorded_at(cls, value):
+        return validate_diary_date(value)
 
 class DiaryPatch(BaseModel):
     text: str | None = Field(default=None, min_length=1)
     allow_retrieval: bool | None = None
     recorded_at: str | None = None
 
+    @field_validator('recorded_at')
+    @classmethod
+    def check_recorded_at(cls, value):
+        return validate_diary_date(value)
 
 class DiaryAddendumIn(BaseModel):
     text: str = Field(min_length=1)
@@ -140,7 +170,7 @@ class CompanionIn(BaseModel):
 
 
 def now_iso() -> str:
-    return datetime.now().isoformat(timespec="seconds")
+    return datetime.now(BEIJING_TIMEZONE).isoformat(timespec="seconds")
 
 
 def classify_emotion(text: str) -> dict[str, Any]:
@@ -415,7 +445,7 @@ def save_feedback(payload: FeedbackIn):
 @app.get("/api/metrics/emotions")
 def emotion_metrics(days: int = 7):
     days = max(1, min(days, 90))
-    cutoff = date.fromordinal(date.today().toordinal() - days + 1).isoformat()
+    cutoff = date.fromordinal(diary_today().toordinal() - days + 1).isoformat()
     counts: dict[str, int] = {}
     for item in DIARIES:
         if not item.get("emotion_confirmed") or item["recorded_at"][:10] < cutoff:

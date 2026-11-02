@@ -29,6 +29,7 @@ export function NatureIcon({ name }) {
 
 export function NatureCalendar({ request, onOpenDiary, onWrite, state, onStateChange }) {
   const today = new Date()
+  const todayKey = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(today)
   const [cursor, setCursor] = useState(() => state ? new Date(state.year, state.month - 1, 1) : new Date(today.getFullYear(), today.getMonth(), 1))
   const [calendar, setCalendar] = useState({ days: [], days_in_month: 0, first_weekday: 0 })
   const [selectedDate, setSelectedDate] = useState(state?.selectedDate || '')
@@ -43,7 +44,7 @@ export function NatureCalendar({ request, onOpenDiary, onWrite, state, onStateCh
     request(`/calendar?year=${year}&month=${month}`).then(data => {
       if (!active) return
       setCalendar(data)
-      setSelectedDate(current => data.days.some(day => day.date === current) ? current : data.days.at(-1)?.date || '')
+      setSelectedDate(current => data.days.some(day => day.date === current && day.date <= todayKey) ? current : data.days.filter(day => day.date <= todayKey).at(-1)?.date || '')
     }).catch(() => { if (active) setError('这个月的心情暂时没有加载出来。') }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [year, month, retry, request])
@@ -58,7 +59,7 @@ export function NatureCalendar({ request, onOpenDiary, onWrite, state, onStateCh
       <div className="calendar-grid">{cells.map((day, index) => {
         const key = day ? `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}` : ''
         const entry = byDate[key]
-        return day ? <button key={key} className={`calendar-cell ${entry ? 'has-mood' : ''} ${selectedDate === key ? 'selected' : ''}`} aria-label={`${key}，${entry ? entry.emotions.join('、') : '无已确认记录'}`} aria-pressed={selectedDate === key} onClick={() => setSelectedDate(key)}>
+        return day ? <button key={key} className={`calendar-cell ${entry ? 'has-mood' : ''} ${selectedDate === key ? 'selected' : ''}`} disabled={key > todayKey} title={key > todayKey ? '未来日期暂不能记录日记' : undefined} aria-label={`${key}，${key > todayKey ? '未来日期暂不能记录' : entry ? entry.emotions.join('、') : '无已确认记录'}`} aria-pressed={selectedDate === key} onClick={() => setSelectedDate(key)}>
           {entry ? <span className="calendar-moods">{entry.emotions.slice(0,3).map(label => <MoodFace key={label} label={label} small />)}</span> : <span className="calendar-empty-ring" aria-hidden="true" />}
           <span className="calendar-number">{day}</span>
         </button> : <span key={`empty-${index}`} />
@@ -69,6 +70,6 @@ export function NatureCalendar({ request, onOpenDiary, onWrite, state, onStateCh
     <section className="calendar-detail" aria-live="polite">{loading ? <div className="detail-empty"><h2>正在打开这段时间…</h2></div> : error ? <div className="detail-empty"><h2>{error}</h2><button className="secondary-button" onClick={() => setRetry(value => value + 1)}>重试</button></div> : selected ? <>
       <p className="eyebrow">{selected.date}</p><h2>这一天的心情</h2><div className="calendar-emotions">{selected.emotions.map(label => <span className="nature-emotion" key={label}><MoodFace label={label}/>{label}</span>)}</div>
       <div className="calendar-diary-list">{selected.diaries.map(diary => <article className="calendar-diary" key={diary.id}><p>{diary.text}</p>{diary.response_text && <div className="calendar-response"><span className="eyebrow">心栖回应</span><p>{diary.response_text}</p></div>}<small>{diary.kind === 'chat' ? '来自聊天' : '独立日记'}</small><button className="secondary-button" onClick={() => onOpenDiary(diary.id)}>打开这篇日记</button></article>)}</div>
-    </> : <div className="detail-empty"><h2>这一天，还没有确认过的心情。</h2><p>未确认或跳过标记的日记，仍可在日记列表里查看。</p><button className="primary-button" onClick={onWrite}>写一篇日记</button></div>}</section>
+    </> : `${year}-${String(month).padStart(2,'0')}-01` > todayKey ? <div className="detail-empty"><h2>未来的日子，等到了再记录。</h2><p>日记只能记录今天或过去的日期。</p></div> : <div className="detail-empty"><h2>这一天，还没有确认过的心情。</h2><p>未确认或跳过标记的日记，仍可在日记列表里查看。</p><button className="primary-button" onClick={onWrite}>写一篇日记</button></div>}</section>
   </div></div>
 }
