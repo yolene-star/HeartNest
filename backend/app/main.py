@@ -15,6 +15,8 @@ import uuid
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ConfigDict
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 from .content import ADVICE_LIBRARY, build_companion_response
 from .llm import request_llm_reply
@@ -56,12 +58,9 @@ async def persist_state(request, call_next):
             with sqlite3.connect(DB_PATH) as db:
                 db.execute('INSERT OR REPLACE INTO state(id,payload) VALUES(1,?)', (payload,))
         return response
-ACTIVITIES = [
-    {"id":"a1","name":"校园散步与拍照","type":"户外","time":"周末","cost":0,"description":"在校园或附近公园慢走，记录三张喜欢的照片"},
-    {"id":"a2","name":"甜品店探店","type":"美食","time":"周末","cost":60,"description":"选择一家安静的甜品店，安排一小时放松时间"},
-    {"id":"a3","name":"看一部轻松电影","type":"室内","time":"今晚","cost":40,"description":"选择喜剧或治愈类影片，给自己留出不被打扰的时间"},
-    {"id":"a4","name":"图书馆主题阅读","type":"室内","time":"下午","cost":0,"description":"挑一本感兴趣的书，进行30分钟轻量阅读"},
-]
+ACTIVITIES_PATH = Path(__file__).resolve().parents[2] / "data" / "activities.json"
+with ACTIVITIES_PATH.open(encoding="utf-8") as activities_file:
+    ACTIVITIES = json.load(activities_file)
 
 class DiaryIn(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -172,30 +171,22 @@ def tokenize(text: str) -> set[str]:
 def memory_search(query: str, top_k: int = 5) -> list[dict[str, Any]]:
     if not SETTINGS["memory_enabled"]:
         return []
-    q = tokenize(query)
-    scored = []
+    candidates: list[dict[str, Any]] = []
     for item in DIARIES:
         if not item.get("allow_retrieval", True):
             continue
         searchable_text = item["text"]
         if item.get("response_text"):
             searchable_text += " " + item["response_text"]
-        tokens = tokenize(searchable_text)
-        score = len(q & tokens) / max(1, len(q)) if q else 0
-        if score > 0:
-            scored.append((score, item))
-    # Keep the most recent matching note first when several notes have the
-    # same lexical score. This prevents an older retry or duplicate test note
-    # from displacing a newly saved diary (including its Agent response).
-    scored.sort(
-        key=lambda x: (
-            x[0],
-            bool(x[1].get("response_text")),
-            x[1].get("recorded_at", ""),
-        ),
-        reverse=True,
-    )
-    return [{**item, "score": round(score, 3)} for score, item in scored[:max(1, min(top_k, 20))]]
+        candidates.append({"item": item, "text": searchable_text})
+    if not candidates or not query.strip():
+        return []
+    vectorizer = TfidfVectorizer(analyzer="char", ngram_range=(1, 2))
+    matrix = vectorizer.fit_transform([query, *[candidate["text"] for candidate in candidates]])
+    scores = cosine_similarity(matrix[0:1], matrix[1:]).ravel()
+    ranked = [(float(score), candidate["item"]) for score, candidate in zip(scores, candidates) if score > 0]
+    ranked.sort(key=lambda pair: (pair[0], bool(pair[1].get("response_text")), pair[1].get("recorded_at", "")), reverse=True)
+    return [{**item, "score": round(score, 3)} for score, item in ranked[:max(1, min(top_k, 20))]]
 
 
 def profile_rejected_text() -> set[str]:

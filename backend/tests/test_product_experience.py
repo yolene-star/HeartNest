@@ -211,6 +211,19 @@ def test_mood_calendar_groups_confirmed_diaries_by_day(api):
     assert all(item["date"].startswith("2026-10") for item in result.json()["days"])
 
 
+def test_memory_search_uses_tfidf_and_activity_data_file(api):
+    diary = api.post(
+        "/api/diaries",
+        json={"text": "我想找一个安静的图书馆阅读时间", "mode": "save", "allow_retrieval": True},
+    ).json()
+    api.patch("/api/settings", json={"memory_enabled": True})
+    found = api.post("/api/memories/search", json={"query": "安静的图书馆阅读"}).json()["items"]
+    assert found[0]["id"] == diary["id"]
+    assert 0 < found[0]["score"] <= 1
+    activities = api.post("/api/recommendations", json={"query": "想阅读", "budget": 0, "time": "下午"}).json()["items"]
+    assert any(item["id"] == "a4" for item in activities)
+
+
 def test_saving_can_be_disabled_without_disabling_diary_review(api):
     diary = api.post("/api/diaries", json={"text": "要保留在日记里的记录"}).json()
     result = api.patch("/api/settings", json={"save_enabled": False})
