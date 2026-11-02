@@ -5,7 +5,8 @@ $stateFile = Join-Path $repoRoot '.deps/public-demo/tunnel.json'
 if (Test-Path -LiteralPath $stateFile) {
     $state = Get-Content -LiteralPath $stateFile -Raw | ConvertFrom-Json
     $process = Get-Process -Id $state.pid -ErrorAction SilentlyContinue
-    if ($process -and $process.ProcessName -eq 'cloudflared' -and $process.StartTime.ToUniversalTime().ToString('o') -eq $state.startedAt) {
+    $expectedTicks = if ($state.startedAtTicks) { [long]$state.startedAtTicks } else { ([datetime]$state.startedAt).ToUniversalTime().Ticks }
+    if ($process -and $process.ProcessName -eq 'cloudflared' -and $process.StartTime.ToUniversalTime().Ticks -eq $expectedTicks) {
         Stop-Process -Id $process.Id
     }
     Remove-Item -LiteralPath $stateFile

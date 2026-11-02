@@ -23,7 +23,8 @@ try {
     if (Test-Path -LiteralPath $stateFile) {
         $previous = Get-Content -LiteralPath $stateFile -Raw | ConvertFrom-Json
         $existing = Get-Process -Id $previous.pid -ErrorAction SilentlyContinue
-        if ($existing -and $existing.ProcessName -eq 'cloudflared' -and $existing.StartTime.ToUniversalTime().ToString('o') -eq $previous.startedAt) {
+        $expectedTicks = if ($previous.startedAtTicks) { [long]$previous.startedAtTicks } else { ([datetime]$previous.startedAt).ToUniversalTime().Ticks }
+        if ($existing -and $existing.ProcessName -eq 'cloudflared' -and $existing.StartTime.ToUniversalTime().Ticks -eq $expectedTicks) {
             Write-Output $previous.url
             return
         }
@@ -40,7 +41,7 @@ try {
         $logs = (Get-Content -LiteralPath $stdout -Raw -ErrorAction SilentlyContinue) + (Get-Content -LiteralPath $stderr -Raw -ErrorAction SilentlyContinue)
         $match = [regex]::Match($logs, 'https://[a-z0-9-]+\.trycloudflare\.com')
         if ($match.Success) {
-            $state = @{ pid=$process.Id; startedAt=$process.StartTime.ToUniversalTime().ToString('o'); url=$match.Value }
+            $state = @{ pid=$process.Id; startedAtTicks=$process.StartTime.ToUniversalTime().Ticks; url=$match.Value }
             $state | ConvertTo-Json | Set-Content -LiteralPath $stateFile -Encoding utf8
             Write-Output $match.Value
             Write-Output '临时链接：需要此电脑、Docker 和隧道进程持续在线。请再运行公网浏览器验证。'

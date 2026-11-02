@@ -11,6 +11,7 @@
 - 桌面 1363×871、窄屏 793×871、手机 390×844 截图已打开目视检查。页眉页脚、输入框和工具抽屉布局可用，演示说明默认折叠。
 - requesting-code-review 技能的独立只读复核指出并协助消除两项 P2：未确认提议落盘、首次多会话占位；修复后复核没有剩余阻塞项。
 - 默认本地模式的五组完整浏览器回归再次通过（独立 `18080` 环境）。
+- 隧道脚本实测覆盖：旧版 ISO 时间记录兼容、数值 ticks 记录复用、时间戳不符时不误杀进程、时间戳相符时停止本轮旧测试隧道；当前交付地址保持在线。已修复 PowerShell 自动解析 JSON 日期后字符串比较失效的问题。
 
 截图：`https-desktop-chat.png`、`https-desktop-diary.png`、`https-narrow-tools.png`、`https-narrow-notice.png`、`https-mobile-notice.png`，另有相应本地 Docker 截图。
 

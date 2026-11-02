@@ -36,7 +36,7 @@ docker compose --env-file NUL -f compose.public.yaml ps
 ./scripts/stop-public-demo.ps1
 ```
 
-脚本将进程标识和日志保存在被忽略的 `.deps/public-demo/`。隧道在后台隐藏运行；重复启动会复用仍运行的进程。停止前检查进程名称及启动时间，避免误杀复用相同 PID 的其它进程。获得 URL 只代表已分配地址，仍需健康检查与实际浏览器验证。
+脚本将进程标识和日志保存在被忽略的 `.deps/public-demo/`。隧道在后台隐藏运行；重复启动会复用仍运行的进程。停止前检查进程名称及 UTC 启动时间 ticks，兼容旧时间字符串记录，避免误杀复用相同 PID 的其它进程。获得 URL 只代表已分配地址，仍需健康检查与实际浏览器验证。
 
 从零构建需要联网下载基础镜像和依赖。此次本机已具备缓存 Python 后端镜像，后端通过 `FROM emotion-companion-backend:latest` 加 `COPY backend /app/backend` 增量构建，未执行断网环境下的全新基础镜像拉取；前端走标准 Compose 构建。仓库的 `compose.public.yaml` 使用完整 Dockerfile，供其它环境正常从零构建。
 
