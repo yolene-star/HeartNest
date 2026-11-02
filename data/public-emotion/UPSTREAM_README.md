@@ -63,7 +63,7 @@ The dataset is in **CSV format** and includes the following columns:
   - 驚奇語調: 499
   - 悲傷語調: 486
   - 厭惡語調: 404
-  - 疑問語調: 386	
+  - 疑問語調: 386
 
 
 ---

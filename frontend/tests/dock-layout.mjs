@@ -27,4 +27,3 @@ try {
   result.passed = true
 } catch (e) { result.failure = e.stack; process.exitCode = 1 }
 finally { await browser.close(); await fs.writeFile(new URL('dock-layout-results.json', out), JSON.stringify(result, null, 2)); console.log(JSON.stringify(result, null, 2)) }
-
