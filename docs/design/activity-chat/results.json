@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "mode": "mocked reply for deterministic UI validation, not live model quality",
+  "checks": [
+    "shortcut sends a normal chat turn",
+    "sidebar filter removed",
+    "draft preserved",
+    "follow-up carries conversation",
+    "no-save default preserves data",
+    "retry without duplicate user turn",
+    "desktop and mobile screenshots"
+  ],
+  "errors": []
+}

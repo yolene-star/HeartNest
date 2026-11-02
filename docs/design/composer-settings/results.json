@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "checks": [
+    "collapsed by default",
+    "compact composer at four viewports",
+    "expand/change/collapse retains settings and draft",
+    "summary shows active save choice",
+    "no-save chat still replies without persisting"
+  ],
+  "errors": []
+}

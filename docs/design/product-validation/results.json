@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "four real navigation destinations",
+    "calendar deep link, independent create/edit drafts and addendum persistence",
+    "write action preserves draft, create/confirm/delete and empty month selection",
+    "real privacy switches persist",
+    "real companion reply, no automatic diary save",
+    "390px: all four pages fit; mobile pet stays in navigation",
+    "768px: all four pages fit; mobile pet stays in navigation",
+    "1024px: all four pages fit; mobile pet stays in navigation",
+    "1440px: all four pages fit; mobile pet stays in navigation",
+    "desktop pet drag and position persistence"
+  ],
+  "errors": [],
+  "passed": true
+}

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "initial position stable across four pages",
+    "avatar drag on all four pages at 1363/793",
+    "drag does not navigate",
+    "reload persists position",
+    "next click opens chat",
+    "picker opens",
+    "drag and resize clamp inside viewport"
+  ],
+  "errors": []
+}

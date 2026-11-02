@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checks": [
+    "independent wheel scroll without document chaining",
+    "standalone writing page",
+    "draft preserved through old-entry edit/addendum",
+    "save failure and retry",
+    "save original and model response",
+    "mobile/tablet list-detail navigation"
+  ],
+  "errors": []
+}
