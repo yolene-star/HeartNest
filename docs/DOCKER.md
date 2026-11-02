@@ -1,5 +1,7 @@
 # Docker 环境与仓库说明
 
+独立公网演示使用 `compose.public.yaml`，与本地数据和模型配置隔离。临时 HTTPS 地址、启动/停止脚本及访客会话限制见 [公网部署说明](PUBLIC-DEPLOYMENT.md)。
+
 ## 启动
 
 安装 Docker Desktop 并启动 Linux 引擎后，在项目根目录执行：

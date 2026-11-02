@@ -1,5 +1,7 @@
 # HeartNest（心栖）：个性化情绪陪伴工具
 
+临时公网演示（2026-11-03 验证）：https://capacity-closely-restricted-operation.trycloudflare.com 。需演示电脑和隧道保持在线；使用本地规则回应、浏览器独立数据。启动、停止、数据边界与验证方法见 [公网部署说明](docs/PUBLIC-DEPLOYMENT.md)。
+
 ## 推荐：Docker Compose
 
 ```powershell
