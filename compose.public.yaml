@@ -1,0 +1,28 @@
+name: heartnest-public-demo
+services:
+  backend:
+    image: heartnest-public-backend:local
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      PUBLIC_DEMO: "true"
+      COMPANION_DB: /app/data/runtime/public-demo.sqlite3
+      LLM_ENABLED: "false"
+      LLM_API_KEY: ""
+    volumes:
+      - public-demo-data:/app/data/runtime
+    restart: unless-stopped
+  frontend:
+    image: heartnest-public-frontend:local
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "127.0.0.1:18081:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  public-demo-data:
