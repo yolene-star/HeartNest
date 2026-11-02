@@ -1,0 +1,8 @@
+{
+  "gapsConfirmed": [
+    "failed chat clears draft and has no direct retry action",
+    "API reports local rules but assistant UI exposes no fallback status",
+    "2001-character prior user turn rejected with 422 before model invocation"
+  ],
+  "note": "Known gaps reproduced; this is not overall acceptance."
+}

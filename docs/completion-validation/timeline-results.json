@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "errors": [],
+  "checks": [
+    "seven chronological days; missing days stay empty; aliases normalized; opens exact diary; mobile and desktop fit"
+  ]
+}

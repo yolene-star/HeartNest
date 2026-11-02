@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "profile create/edit persists",
+    "catalog API time/budget filtering and explicit preference feedback; sidebar form retired",
+    "whole exchange save and real source-linked advice alternative",
+    "diary retrieval permission revoked and remains revoked after reload"
+  ],
+  "errors": [],
+  "started_at": "2026-11-02T17:51:54.083Z",
+  "passed": true
+}
