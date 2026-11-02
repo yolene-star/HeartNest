@@ -327,6 +327,16 @@ body{background:#eef0ea}
 .public-demo-notice { flex:0 0 auto; margin:0 0 8px; color:#465344; font-size:12px; }
 .public-demo-notice summary { cursor:pointer; padding:4px 0; }
 .public-demo-notice p { margin:4px 0 8px; max-width:70ch; line-height:1.6; }
+/* Reset inherited two-column placement when pet cards become vertical. */
+@media(min-width:700px) {
+  .pet-selection-grid { grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); }
+  .pet-selection .illustrated-pet,.pet-selection .sprite-pet { grid-row:1;grid-column:1; }
+  .pet-selection .pet-name,.pet-selection .pet-manner,.pet-selection .pet-intro,.pet-selection .choose-pet { grid-column:1; }
+  .pet-selection .pet-name { grid-row:2; }
+  .pet-selection .pet-manner { grid-row:3; }
+  .pet-selection .pet-intro { grid-row:4; }
+  .pet-selection .choose-pet { grid-row:5; }
+}
 .advice-history h4 { margin: 6px 0; }
 
 @media(max-width:1100px) {

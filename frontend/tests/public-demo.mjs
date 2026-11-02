@@ -27,6 +27,17 @@ try {
   await page.goto(base)
   await expect(page.getByRole('heading', { name: '谁来陪你一会儿？' })).toBeVisible({ timeout: 30000 })
   assert.equal(issuedTokens.size, 1, 'first load must bootstrap exactly one visitor session')
+  for (const width of [1363, 793, 390]) {
+    await page.setViewportSize({ width, height: 871 })
+    const name = await page.locator('.pet-name').first().boundingBox()
+    assert(name.width >= 120, `pet introduction must remain readable at ${width}px`)
+    if (width >= 700) {
+      const avatar = await page.locator('.pet-selection').first().locator('.illustrated-pet,.sprite-pet').boundingBox()
+      assert(name.y >= avatar.y + avatar.height - 1, 'pet names must appear below avatars without overlap')
+    }
+    await page.screenshot({ path: `${out}/${prefix}-onboarding-${width}.png` })
+  }
+  await page.setViewportSize({ width: 1363, height: 871 })
   await page.getByRole('button', { name: '认识 沐沐' }).click()
   await page.locator('#nickname').fill('演示访客甲')
   await page.getByRole('button', { name: '继续', exact: true }).click()
