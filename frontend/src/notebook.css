@@ -349,6 +349,27 @@ body{background:#eef0ea}
 .mumu-portrait img{position:absolute;display:block;width:143.2836%;height:127.6119%;max-width:none;left:-26.8657%;top:-.7463%;object-fit:fill;transform:none}
 .nav-pet .mumu-portrait{width:25px;height:25px;margin:0 auto}
 
+/* Keep the draft and tools in two compact rows, without shrinking touch targets. */
+.notebook-shell:not(.quiet-active) .composer{margin:0 10px 8px;padding:6px 10px}
+.notebook-shell:not(.quiet-active) .composer textarea{display:block;height:40px;min-height:40px;max-height:40px;line-height:20px;background-size:auto; background-image:repeating-linear-gradient(transparent 0 19px,#8a9f6e14 19px 20px);padding:0 2px;overflow-y:auto}
+.composer-footer{gap:8px;flex-wrap:nowrap}
+.composer-shortcuts{display:flex;flex:0 0 auto;align-items:center}
+.composer-shortcuts .text-link{min-height:44px;padding:4px 6px;white-space:nowrap}
+.composer-footer>.primary-button{min-height:44px;padding:6px 12px;flex:0 0 auto}
+.composer-settings summary{overflow:hidden}
+.composer-settings summary span{overflow:hidden;text-overflow:ellipsis}
+@media(max-width:400px){
+  .composer-settings summary{flex-wrap:wrap;align-content:center;gap:0 2px;white-space:normal;overflow:visible;line-height:14px}
+  .composer-settings summary span{flex:0 0 100%;order:1;white-space:normal;overflow:visible;text-overflow:clip}
+}
+.composer-settings-panel{bottom:54px}
+@media(max-width:1100px){.composer-footer>span{display:none}}
+@media(max-width:650px){
+  .notebook-shell:not(.quiet-active) .composer{margin:0 8px 8px;padding:6px 8px}
+  .composer-footer{gap:6px}
+  .composer-shortcuts .text-link{padding:4px;font-size:11px}
+  .composer-footer>.primary-button{padding:6px 10px}
+}
 
 @media(max-width:1100px) {
   .companion-bookmark.floating-tools { position:fixed; z-index:25; left:24px; top:110px; width:48px; height:50px; min-width:48px; padding:5px 0 4px; gap:0; border:1px solid #bdccaa; border-radius:14px; background:#f5f7ec; box-shadow:0 3px 10px #43553420; touch-action:none; user-select:none; cursor:grab; }

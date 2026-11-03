@@ -340,14 +340,13 @@ function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, respon
         {saveError && <p className="inline-error" role="alert">{saveError}</p>}
         {!saveEnabled && <p className="save-disabled-note">新记录保存已关闭。当前聊天不会自动保存。</p>}
         <form className="composer" onSubmit={event => { event.preventDefault(); send() }}>
-          <div className="composer-shortcuts"><button type="button" className="text-link" disabled={sending} onClick={() => send(ACTIVITY_PROMPT)}>一起找个小活动</button></div>
           <label className="sr-only" htmlFor="chat-message">和{pet.name}说说今天</label>
           <textarea ref={composerInput} id="chat-message" maxLength={CHAT_TEXT_LIMIT} placeholder="今天有什么想和我说的？" value={draft} onChange={event => { setDraft(event.target.value); setPetMood(event.target.value ? 'listening' : 'idle') }} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); send() } }} rows={2} />
           <div className="composer-footer"><details className="composer-settings"><summary>聊天设置<span> · {!saveEnabled ? '保存已关闭' : saveToMemory ? saveReply ? '保存原话和回应' : '保存原话' : '本次不保存'}</span></summary><div className="composer-settings-panel" role="region" aria-label="聊天保存设置"><div className="send-mode" role="radiogroup" aria-label="聊天记忆保存"><label><input type="radio" name="chat-memory" checked={saveToMemory && saveEnabled} disabled={!saveEnabled || sending} onChange={() => { setSaveToMemory(true); }} />保存到 Agent 记忆库</label><label><input type="radio" name="chat-memory" checked={!saveToMemory || !saveEnabled} disabled={sending} onChange={() => { setSaveToMemory(false); }} />不保存</label></div>
           <label className="chat-response-consent"><input type="checkbox" checked={saveReply} disabled={sending || !saveEnabled} onChange={e => { setSaveReply(e.target.checked); }} />同时保存心栖回应</label>
           {saveReply && <p className="chat-memory-note">仅在你选择保存时，原话和回应才一起写入日记；回应会单独标明来源，也可用于后续记忆检索。</p>}
           <p className="chat-memory-note">{saveToMemory && saveEnabled ? `每条消息都会得到回复；你的原话会保存到日记，${memoryEnabled ? '可供以后记忆检索。' : '记忆调用已关闭，暂不参与检索。'}` : '每条消息都会得到回复；原话仅用于当前会话，不写入日记。个人资料需另行确认才保存。'}</p>
-          </div></details><span>按 Enter 发送 · Shift + Enter 换行</span><button className="primary-button" type="submit" disabled={!draft.trim() || sending}>发送</button></div>
+          </div></details><div className="composer-shortcuts"><button type="button" className="text-link" disabled={sending} onClick={() => send(ACTIVITY_PROMPT)}>一起找个小活动</button></div><span>按 Enter 发送 · Shift + Enter 换行</span><button className="primary-button" type="submit" disabled={!draft.trim() || sending}>发送</button></div>
         </form>
       </section>
       <aside className="companion-aside"><CompanionTools diaries={diaries} memoryEnabled={memoryEnabled} onOpenDiaries={openDiaryFromChat} /></aside>
