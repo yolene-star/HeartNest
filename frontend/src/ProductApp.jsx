@@ -96,7 +96,7 @@ function ProductApp() {
     <header className="product-header">
       <button className="wordmark" onClick={() => setPage('陪伴')} aria-label="回到陪伴首页"><span className="wordmark-symbol"><NatureIcon name="leaf" /></span><span><strong>心栖</strong><small>情绪陪伴与日记</small></span></button>
       <nav className="primary-nav" aria-label="主导航">
-        {['陪伴', '日记', '回顾', '我的'].map((item, index) => <button key={item} data-page-number={`0${index + 1}`} aria-label={item} aria-current={page === item ? 'page' : undefined} className={`nav-link ${page === item ? 'active' : ''} ${item === '陪伴' ? 'nav-companion' : ''}`} onClick={() => { setPage(item); if (item === '日记') setDiaryView('calendar') }}><NatureIcon name={item} />{item === '陪伴' && <span className="nav-pet"><PetAvatar pet={currentPet} mood={petMood} /></span>}<span>{item}</span></button>)}
+        {['陪伴', '日记', '回顾', '我的'].map((item, index) => <button key={item} data-page-number={`0${index + 1}`} aria-label={item} aria-current={page === item ? 'page' : undefined} className={`nav-link ${page === item ? 'active' : ''} ${item === '陪伴' ? 'nav-companion' : ''}`} onClick={() => { setPage(item); if (item === '日记') setDiaryView('calendar') }}><NatureIcon name={item} />{item === '陪伴' && <span className="nav-pet"><PetAvatar pet={currentPet} mood={petMood} portrait /></span>}<span>{item}</span></button>)}
       </nav>
       <div className="notebook-cover-note" aria-hidden="true"><NatureIcon name="leaf" /><p>把普通的一天，<br />也好好收在这里。</p><span>little things, kept close.</span></div>
       <span className="privacy-indicator"><i className={settings.memory_enabled ? 'status-led on' : 'status-led'} />{settings.memory_enabled ? '记忆调用已开启' : '记忆调用已关闭'}</span>
@@ -302,7 +302,7 @@ function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, respon
             {message.emotionLabel && <span className="confirmed-mini-tag">你标记为 {message.emotionLabel}</span>}
             {savedIds.includes(message.id) && <span className="saved-mini-tag">已加入 Agent 记忆库</span>}
           </article> : <article className="chat-turn agent-turn" key={message.id} data-testid="assistant-reply">
-            <div className="agent-avatar"><PetAvatar pet={pet} mood={message.safety ? 'comforting' : 'idle'} /></div>
+            <div className="agent-avatar"><PetAvatar pet={pet} mood={message.safety ? 'comforting' : 'idle'} portrait /></div>
             <div className="agent-content"><div className="agent-name">{pet.name}<span>陪伴中</span></div><div className="message agent-message">{message.text}</div><ReplyProvenance message={message} />{message.profileProposals?.map(proposal => <ProfileUpdateCard key={proposal.id} proposal={proposal} onRefresh={onDiarySaved} />)}
               {message.relaxationInvitation && <section className="relaxation-invitation" data-testid="relaxation-invitation"><p>想不想一起缓一缓？可以安静待会儿，也可以看看一个小办法。</p><div><button className="secondary-button" onClick={() => { dismissInvitation(message.id); setRelaxationOpen(true) }}>看看放松方式</button><button className="text-link" onClick={() => { dismissInvitation(message.id) }}>先不用</button></div></section>}
               {message.memories?.length > 0 && <div className="memory-citations"><span className="evidence-kicker">找到的历史记录</span>{message.memories.map(memory => <blockquote key={memory.id}><p>日记原文：“{memory.text}”</p>{memory.response_text && <p className="memory-agent-response">心栖当时回应：“{memory.response_text}”</p>}<cite>{dateLabel(memory.recorded_at)}</cite></blockquote>)}</div>}
@@ -713,7 +713,8 @@ function PetPicker({ currentPet, onChoose, onClose }) {
   return <div className="onboarding-backdrop"><section className="onboarding-panel pet-picker-panel" role="dialog" aria-modal="true" aria-labelledby="pet-picker-title"><button className="modal-close" aria-label="关闭选择" onClick={onClose}>×</button><p className="eyebrow">陪伴伙伴</p><h1 id="pet-picker-title">想换一位伙伴吗？</h1><div className="pet-selection-grid">{PETS.map(pet => <button key={pet.id} className={pet.id === currentPet.id ? 'pet-selection selected' : 'pet-selection'} onClick={() => onChoose(pet.id)}><PetAvatar pet={pet} mood="idle" large /><span className="pet-name">{pet.name}<small>{pet.kind}</small></span><span className="pet-intro">“{pet.intro}”</span><span className="choose-pet">选择 {pet.name}</span></button>)}</div></section></div>
 }
 
-function PetAvatar({ pet, mood = 'idle', large = false, animated = false }) {
+function PetAvatar({ pet, mood = 'idle', large = false, animated = false, portrait = false }) {
+  if (portrait && pet.id === 'otter') return <span className="mumu-portrait" role="img" aria-label="沐沐陪伴中" data-motion="static"><img src="/pets/mumu/idle-0.png" alt="" /></span>
   return <SpritePet pet={pet} mood={mood} label={`${pet.name}陪伴中`} large={large} animated={animated} />
 }
 
