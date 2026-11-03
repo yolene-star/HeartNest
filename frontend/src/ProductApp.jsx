@@ -168,6 +168,20 @@ function Onboarding({ onComplete }) {
 
 function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, responsePreference, diaries, memoryEnabled, saveEnabled, setPetMood, setNotice, onDiarySaved, onOpenDiaries }) {
   const [chat, setChat] = useState([])
+  const [openingLine, setOpeningLine] = useState(null)
+  const frozenOpening = useRef(null)
+  const genericOpening = `${nickname ? `${nickname}，` : ''}今天想从哪件小事聊起，或者让我安静陪你一会儿？`
+  const openingText = frozenOpening.current || openingLine?.text || genericOpening
+  useEffect(() => {
+    if (chat.length) return
+    let cancelled = false
+    // Discard prior personalization immediately while consent/data changes reload.
+    setOpeningLine(null)
+    request('/companion/opening').then(result => {
+      if (!cancelled && typeof result.text === 'string' && result.text.trim()) setOpeningLine(result)
+    }).catch(() => { /* A greeting failure must never block chatting. */ })
+    return () => { cancelled = true }
+  }, [chat.length, nickname, memoryEnabled, diaries])
   const openDiaryFromChat = onOpenDiaries
   const [toolsOpen, setToolsOpen] = useState(false)
   useEffect(() => {
@@ -205,7 +219,6 @@ function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, respon
   const composerInput = useRef(null)
   const lastUserTurn = useMemo(() => [...chat].reverse().find(message => message.role === 'user'), [chat])
   const lastAssistantTurn = useMemo(() => [...chat].reverse().find(message => message.role === 'assistant'), [chat])
-  const greetings = nickname ? `${nickname}，今天有什么想和我说的吗？不想聊也没关系。` : '今天有什么想和我说的吗？不想聊也没关系。'
 
   useEffect(() => {
     const scroll = messagesEnd.current?.parentElement
@@ -221,8 +234,9 @@ function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, respon
       userId: crypto.randomUUID(), userText: displayText || (wantAdvice && content !== '我现在想放松一下，请给我一个简单的练习。' ? '请根据我们刚才聊的内容，给我一个小建议。' : content), excludeAdviceIds: [...new Set([...excludeAdviceIds, ...declinedAdvice.current])],
       saveOriginal: !wantAdvice && saveToMemory && saveEnabled, saveResponse: saveReply,
       preference: responsePreference,
-      conversation: chat.filter(message => message.role === 'user' || message.role === 'assistant').slice(-6).map(message => ({ role: message.role, content: message.text })),
+      conversation: [{ role: 'assistant', content: openingText }, ...chat.filter(message => message.role === 'user' || message.role === 'assistant').map(message => ({ role: message.role, content: message.text }))].slice(-6),
     }
+      if (!frozenOpening.current) frozenOpening.current = openingText
     sendingLock.current = true
     setSaveError('')
     if (!retryJob) {
@@ -296,7 +310,7 @@ function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, respon
     <div className="companion-grid">
       <section className="conversation-panel" aria-label="陪伴对话"><div className="nature-chat-heading"><span className="status-led on" /><strong>{pet.name}在听</strong><span>先陪你聊聊，不急着想办法</span>{quiet && <button className="quiet-chat-close" aria-label="关闭聊天面板" onClick={() => openQuietChat(false)}>收起</button>}</div>
         <div className="conversation-scroll" aria-live="polite">
-          {!chat.length && <div className="conversation-empty"><p>{pet.intro}</p><span>从一件小事开始也可以。</span></div>}
+          <article className="chat-turn agent-turn opening-turn" data-testid="companion-greeting"><div className="agent-avatar"><PetAvatar pet={pet} mood="idle" portrait /></div><div className="agent-content"><div className="agent-name">{pet.name}<span>陪伴中</span></div><div className="message agent-message">{openingText}</div></div></article>
           {chat.map((message, index) => message.role === 'notice' ? <div className="save-only-confirmation" role="status" key={message.id}>{message.text}</div> : message.role === 'failed' ? <section className="failed-request" role="alert" data-testid="failed-request" key={message.id}><p>回应暂时没有送达。你的原文还在，可以重试。</p>{message.job.wantAdvice && <p>这次请求：给我一个小办法</p>}<small>{message.job.wantAdvice ? '重试不会自动保存新的日记。' : message.job.saveOriginal ? `重试成功后，按这条消息原来的选择保存${message.job.saveResponse ? '原话和回应' : '原话'}。` : '这条消息原来选择了不保存，重试也不会写入日记。'}</small><button className="secondary-button" disabled={sending} onClick={() => send(message.job.text, message.job.wantAdvice, message.job)}>重试回应</button></section> : message.role === 'user' ? <article className="chat-turn user-turn" key={message.id}>
             <div className="message user-message">{message.text}</div>
             {message.emotionLabel && <span className="confirmed-mini-tag">你标记为 {message.emotionLabel}</span>}

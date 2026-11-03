@@ -396,6 +396,12 @@ def create_diary(payload: DiaryIn):
     item['response'] = None
     return item
 
+@app.get('/api/companion/opening')
+def companion_opening():
+    from .opening import build_opening
+    return build_opening(DIARIES, SETTINGS, diary_today())
+
+
 @app.post("/api/companion/respond")
 def companion_respond(payload: CompanionIn):
     text = payload.text.strip()
