@@ -1,0 +1,66 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "width": 568,
+      "height": 871,
+      "rightGap": 0,
+      "foldedTextClipped": false
+    },
+    {
+      "width": 1640,
+      "height": 900,
+      "rightGap": 0,
+      "foldedTextClipped": false
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "rightGap": 0,
+      "foldedTextClipped": false
+    },
+    {
+      "width": 2560,
+      "height": 1440,
+      "rightGap": 0,
+      "foldedTextClipped": false
+    },
+    {
+      "width": 1363,
+      "height": 871,
+      "rightGap": 0,
+      "foldedTextClipped": false
+    },
+    {
+      "width": 793,
+      "height": 871,
+      "rightGap": 0,
+      "foldedTextClipped": false
+    },
+    {
+      "width": 1363,
+      "height": 650,
+      "rightGap": 0,
+      "foldedTextClipped": false
+    },
+    {
+      "width": 793,
+      "height": 650,
+      "rightGap": 0,
+      "foldedTextClipped": false
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "rightGap": 0,
+      "foldedTextClipped": false
+    },
+    {
+      "width": 320,
+      "height": 640,
+      "rightGap": 0,
+      "foldedTextClipped": false
+    }
+  ],
+  "errors": []
+}
