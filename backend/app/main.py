@@ -172,7 +172,7 @@ class RecommendationIn(BaseModel):
 
 class FeedbackIn(BaseModel):
     recommendation_id: str
-    action: Literal['accept','reject','modify','experienced']
+    action: Literal['accept','reject','modify','experienced','uncomfortable']
     experience: str = ""
     remember_preference: bool = False
 
@@ -397,21 +397,25 @@ def create_diary(payload: DiaryIn):
 @app.post("/api/companion/respond")
 def companion_respond(payload: CompanionIn):
     text = payload.text.strip()
+    from .advice_policy import discomfort, advice_declined, risk_context, requests_advice
+    want_advice = payload.want_advice or requests_advice(text)
     conversation = [turn.model_dump() for turn in payload.conversation]
     understanding = understand_text(text, conversation)
     asks_about_history = understanding['intent'] == 'recall'
     query = understanding['memory_query'] or text
     memories = memory_search(query, 3) if SETTINGS["memory_enabled"] and asks_about_history and not is_safety_signal(text) else []
-    response = build_companion_response(text, payload.want_advice, memories, SETTINGS["memory_enabled"], payload.response_preference,
-                                        asks_about_history=asks_about_history, emotion=understanding['emotion'], exclude_advice_ids=payload.exclude_advice_ids)
+    response = build_companion_response(text, want_advice, memories, SETTINGS["memory_enabled"], payload.response_preference,
+                                        asks_about_history=asks_about_history, emotion=understanding['emotion'], exclude_advice_ids=payload.exclude_advice_ids,
+                                        profiles=PROFILES, conversation=conversation)
     response['understanding_source'] = understanding['source']
     response['communication_policy_version'] = COMMUNICATION_POLICY_VERSION
     response['intent'] = understanding['intent']
     response["llm_used"] = False
-    response['reply_source'] = 'safety' if response['safety'] else 'memory' if asks_about_history else 'advice' if payload.want_advice else 'rules'
+    response['reply_source'] = 'safety' if response['safety'] else 'memory' if asks_about_history else 'advice' if want_advice else 'rules'
     response['reply_fallback_reason'] = None
-    response['profile_proposals'] = propose_profile_updates(text, understanding.get('profile_candidates', [])) if not response['safety'] and not asks_about_history and not payload.want_advice else []
-    if not response["safety"] and not payload.want_advice and not asks_about_history:
+    response['profile_proposals'] = propose_profile_updates(text, understanding.get('profile_candidates', [])) if not response['safety'] and not asks_about_history and not want_advice else []
+    controlled_context = discomfort(text) or advice_declined(text) or risk_context(text) != 'ordinary'
+    if not response["safety"] and not want_advice and not asks_about_history and not controlled_context:
         mode = llm_reply_mode()
         llm_reply = request_llm_reply(text, payload.response_preference, understanding['emotion']['label'], conversation)
         if llm_reply:
@@ -525,10 +529,11 @@ def update_settings(payload: SettingsIn):
 
 @app.post("/api/recommendations")
 def recommendations(payload: RecommendationIn):
-    rejected = profile_rejected_text()
+    from .advice_policy import activity_candidates
+    rejected = profile_rejected_text() if SETTINGS['memory_enabled'] else set()
     words = tokenize(payload.query)
     candidates = []
-    for activity in ACTIVITIES:
+    for activity in activity_candidates(ACTIVITIES, payload.query, profiles=PROFILES, memory_enabled=SETTINGS['memory_enabled']):
         if any(bad in activity['name'] or bad == activity['type'] for bad in rejected):
             continue
         if payload.budget is not None and activity["cost"] > payload.budget:
@@ -540,7 +545,7 @@ def recommendations(payload: RecommendationIn):
         if score:
             reasons.append('符合当前诉求关键词')
         activity_words = tokenize(activity['name'] + activity['type'] + activity['description'])
-        for profile in PROFILES:
+        for profile in PROFILES if SETTINGS['memory_enabled'] else []:
             if not profile.get('confirmed') or profile['status'] != 'active' or profile['type'] not in {'喜欢', '想尝试'}:
                 continue
             if tokenize(profile['content']) & activity_words:
@@ -550,7 +555,8 @@ def recommendations(payload: RecommendationIn):
             reasons.append(f"费用不超过 {payload.budget:g} 元")
         if payload.time:
             reasons.append(f"时间符合：{payload.time}")
-        candidates.append((score, {**activity, 'reasons': reasons or ['符合筛选条件的模拟活动']}))
+        basis_reason = '依据文献选择活动方向，具体活动为模拟数据' if activity['basis']['type'] == 'literature' else '根据当前诉求或获授权的明确偏好选择'
+        candidates.append((score, {**activity, 'reasons': reasons or [basis_reason]}))
     candidates.sort(key=lambda x: x[0], reverse=True)
     return {"items": [item for _, item in candidates[:3]], "explanation": "根据当前诉求、预算、时间和已记录偏好筛选"}
 
@@ -559,10 +565,21 @@ def save_feedback(payload: FeedbackIn):
     activity = next((x for x in ACTIVITIES if x['id'] == payload.recommendation_id), None)
     if activity is None and payload.recommendation_id not in ADVICE_LIBRARY:
         raise HTTPException(404, '建议不存在')
-    if payload.remember_preference and (activity is None or payload.action == 'modify'):
-        raise HTTPException(422, '只有活动的接受、拒绝或体验反馈可以确认成偏好')
+    if activity is not None and payload.action == 'uncomfortable' and payload.remember_preference:
+        raise HTTPException(422, '活动不适先记录本次体验，长期偏好请在「我的」明确修改')
+    if payload.remember_preference and (payload.action == 'modify' or (activity is None and payload.action not in {'reject', 'uncomfortable'})):
+        raise HTTPException(422, '练习仅能确认长期避开，不能把接受练习等同长期喜好')
     record = {"id": uuid.uuid4().hex[:10], **payload.model_dump(), "created_at": now_iso()}
     FEEDBACK.append(record)
+    if payload.remember_preference and activity is None:
+        profile = next((item for item in PROFILES if item.get('advice_id') == payload.recommendation_id), None)
+        if profile is None:
+            profile = {'id': uuid.uuid4().hex[:10], 'source_id': None, 'created_at': now_iso()}
+            PROFILES.append(profile)
+        profile.update(content=ADVICE_LIBRARY[payload.recommendation_id]['title'], type='反感', status='rejected', confirmed=True,
+                       category='interest', advice_id=payload.recommendation_id, source_feedback_id=record['id'], updated_at=now_iso())
+        record['profile_id'] = profile['id']
+        return record
     if payload.remember_preference:
         # A one-off rejection never becomes a long-term dislike without consent.
         content = activity['type'] if payload.action == 'reject' else activity['name']

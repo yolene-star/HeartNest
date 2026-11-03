@@ -47,7 +47,7 @@ try {
   result.checks.push('profile create/edit persists')
   await page.getByRole('button', { name: '陪伴', exact: true }).click()
   // Activity catalog remains an API contract; the product entry now discusses activities in chat.
-  const catalog = await api('/recommendations', 'POST', { query: '', budget: 0, time: '下午' })
+  const catalog = await api('/recommendations', 'POST', { query: '想阅读', budget: 0, time: '下午' })
   assert.equal(catalog.items.length, 1)
   assert.match(catalog.items[0].name, /图书馆主题阅读/)
   await api('/feedback', 'POST', { recommendation_id: catalog.items[0].id, action: 'reject', remember_preference: false })

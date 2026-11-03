@@ -197,6 +197,7 @@ function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, respon
   const [sending, setSending] = useState(false)
   const sendingLock = useRef(false)
   const completedRequests = useRef(new Set())
+  const declinedAdvice = useRef(new Set())
   const [savedIds, setSavedIds] = useState([])
   const [editEmotionFor, setEditEmotionFor] = useState(null)
   const [saveError, setSaveError] = useState('')
@@ -217,7 +218,7 @@ function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, respon
     if ([...content].length > CHAT_TEXT_LIMIT) { setSaveError('每条消息最多 4000 字，可以分成几段慢慢说。'); return }
     const job = retryJob || {
       id: crypto.randomUUID(), text: content, wantAdvice,
-      userId: crypto.randomUUID(), userText: displayText || (wantAdvice && content !== '我现在想放松一下，请给我一个简单的练习。' ? '请根据我们刚才聊的内容，给我一个小建议。' : content), excludeAdviceIds,
+      userId: crypto.randomUUID(), userText: displayText || (wantAdvice && content !== '我现在想放松一下，请给我一个简单的练习。' ? '请根据我们刚才聊的内容，给我一个小建议。' : content), excludeAdviceIds: [...new Set([...excludeAdviceIds, ...declinedAdvice.current])],
       saveOriginal: !wantAdvice && saveToMemory && saveEnabled, saveResponse: saveReply,
       preference: responsePreference,
       conversation: chat.filter(message => message.role === 'user' || message.role === 'assistant').slice(-6).map(message => ({ role: message.role, content: message.text })),
@@ -306,9 +307,11 @@ function CompanionPage({ active, quiet, setQuiet, petMood, pet, nickname, respon
               {message.relaxationInvitation && <section className="relaxation-invitation" data-testid="relaxation-invitation"><p>想不想一起缓一缓？可以安静待会儿，也可以看看一个小办法。</p><div><button className="secondary-button" onClick={() => { dismissInvitation(message.id); setRelaxationOpen(true) }}>看看放松方式</button><button className="text-link" onClick={() => { dismissInvitation(message.id) }}>先不用</button></div></section>}
               {message.memories?.length > 0 && <div className="memory-citations"><span className="evidence-kicker">找到的历史记录</span>{message.memories.map(memory => <blockquote key={memory.id}><p>日记原文：“{memory.text}”</p>{memory.response_text && <p className="memory-agent-response">心栖当时回应：“{memory.response_text}”</p>}<cite>{dateLabel(memory.recorded_at)}</cite></blockquote>)}</div>}
               {message.emotionSuggestion && !message.safety && <EmotionPrompt suggestion={message.emotionSuggestion} turn={chat.find(item => item.id === message.userId) || lastUserTurn} onConfirm={label => { const linked = chat.find(item => item.id === message.userId) || lastUserTurn; if (linked) setTurnEmotion(linked.id, label) }} editing={editEmotionFor === message.id} onEdit={() => setEditEmotionFor(editEmotionFor === message.id ? null : message.id)} />}
-              {message.suggestion && <AdviceCard requestBusy={sending} seenIds={message.excludedAdviceIds} advice={message.suggestion} onAlternative={excluded => send(message.adviceContext || chat.find(item => item.id === message.userId)?.text || '我现在想放松一下。', true, null, '这个办法有些费力，请换一个更轻松的建议。', excluded)} onFeedback={async (action, experience, adviceId) => {
-                await request('/feedback', json('POST', { recommendation_id: adviceId, action, experience }))
-                setNotice(action === 'reject' ? '已记下这次选择，不会把它当成长期偏好。' : action === 'modify' ? '已按你的反馈调整这次建议。' : '已记下你愿意尝试。')
+              {message.suggestion && <AdviceCard requestBusy={sending} seenIds={message.excludedAdviceIds} advice={message.suggestion} onAlternative={excluded => send(message.adviceContext || chat.find(item => item.id === message.userId)?.text || '我现在想放松一下。', true, null, '这个办法有些费力，请换一个更轻松的建议。', excluded)} onFeedback={async (action, experience, adviceId, remember = false) => {
+                await request('/feedback', json('POST', { recommendation_id: adviceId, action, experience, remember_preference: remember }))
+                if (['reject', 'uncomfortable', 'modify'].includes(action)) declinedAdvice.current.add(adviceId)
+                if (remember) await onDiarySaved()
+                setNotice(remember ? '已确认长期避开，可在「我的」修改或删除；使用遵循记忆开关。' : ['reject', 'uncomfortable'].includes(action) ? '本次会话不再推荐这个办法，不会自动记成长期偏好。' : action === 'modify' ? '已按你的反馈调整这次建议。' : '已记下你愿意尝试。')
               }} />}
               {message.id === lastAssistantTurn?.id && !message.safety && !message.suggestion && <div className="turn-actions"><button className="inline-action" onClick={() => send(chat.find(item => item.id === message.userId)?.text || '', true)} disabled={!message.userId || sending}>给我一个小建议</button>{message.userId && !savedIds.includes(message.userId) && <button className="inline-action secondary-action" disabled={!saveEnabled || savingTurns.includes(message.userId)} onClick={() => saveTurn(message)}>{savingTurns.includes(message.userId) ? '正在加入记忆库…' : '加入 Agent 记忆库'}</button>}</div>}
               {message.suggestion && message.id === lastAssistantTurn?.id && message.userId && !savedIds.includes(message.userId) && <button className="inline-action secondary-action" disabled={!saveEnabled || savingTurns.includes(message.userId)} onClick={() => saveTurn(message)}>{savingTurns.includes(message.userId) ? '正在加入记忆库…' : '加入 Agent 记忆库'}</button>}
@@ -452,12 +455,13 @@ function AdviceCard({ advice, onFeedback, onAlternative, seenIds, requestBusy = 
   const seen = seenIds || [advice.id]
   const [busy, setBusy] = useState(false)
   const [feedback, setFeedback] = useState('')
+  const [rememberAvoidance, setRememberAvoidance] = useState(false)
 
   const choose = async (action, experience, confirmation) => {
     if (busy || requestBusy) return
     setBusy(true)
     try {
-      await onFeedback(action, experience, current.id)
+      await onFeedback(action, experience, current.id, ['reject', 'uncomfortable'].includes(action) && rememberAvoidance)
       if (action === 'modify') {
         const response = await onAlternative(seen)
         if (response?.suggestion) { setFeedback('新建议已在下方回复，原建议保留。'); return }
@@ -468,7 +472,28 @@ function AdviceCard({ advice, onFeedback, onAlternative, seenIds, requestBusy = 
     catch { setFeedback('这次选择没有保存成功，请稍后重试。'); }
     finally { setBusy(false) }
   }
-  return <section className="advice-card" data-testid="advice-card"><div className="advice-label"><span className="advice-mark">一步</span><span>一个可选的小办法</span></div><h3>{current.title}</h3><p>{current.step}</p><div className="advice-actions"><button disabled={busy} className="tag-choice" onClick={() => choose('accept', '愿意尝试', '已记下你愿意尝试。')}>试一下</button><button disabled={busy} className="text-link" onClick={() => choose('modify', '换一种练习', '换了一种练习，你可以看看是否适合。')}>换个更轻松的</button><button disabled={busy} className="text-link" onClick={() => choose('reject', '这次不想尝试', '这次先不做，没关系。')}>先不用</button></div>{feedback && <p className="advice-feedback" role="status">{feedback}</p>}<button className="evidence-toggle" aria-expanded={showEvidence} onClick={() => setShowEvidence(value => !value)}>{showEvidence ? '收起依据与适用范围' : '依据与适用范围'}</button>{showEvidence && <div className="evidence-detail"><p>{current.limitation}</p><a href={current.source.url} target="_blank" rel="noreferrer">{current.source.title} · {current.source.publisher} · {current.source.year}</a></div>}</section>
+  return <section className="advice-card" data-testid="advice-card">
+    <div className="advice-label"><span className="advice-mark">一步</span><span>一个可选的小办法</span></div>
+    <h3>{current.title}</h3><p>{current.step}</p>
+    <div className="advice-actions">
+      <button disabled={busy || requestBusy} className="tag-choice" onClick={() => choose('accept', '愿意尝试', '已记下你愿意尝试。')}>试一下</button>
+      <button disabled={busy || requestBusy} className="text-link" onClick={() => choose('modify', '换一种练习', '换了一种练习，你可以看看是否适合。')}>换个更轻松的</button>
+      <button disabled={busy || requestBusy} className="text-link" onClick={() => choose('reject', '这次不想尝试', '这次先不做，没关系。')}>先不用</button>
+      <button disabled={busy || requestBusy} className="text-link" onClick={() => choose('uncomfortable', '尝试后不舒服', '先停下这个办法，不必坚持。想换一个或只聊聊都可以。')}>做了不舒服</button>
+    </div>
+    <label className="advice-remember"><input type="checkbox" checked={rememberAvoidance} disabled={busy || requestBusy} onChange={event => setRememberAvoidance(event.target.checked)} />拒绝或不适时，也确认以后避开这个办法</label>
+    <small className="advice-consent-note">默认只影响本次会话。确认后可在「我的」修改或删除，使用遵循记忆开关。</small>
+    {feedback && <p className="advice-feedback" role="status">{feedback}</p>}
+    <button className="evidence-toggle" aria-expanded={showEvidence} onClick={() => setShowEvidence(value => !value)}>{showEvidence ? '收起依据与适用范围' : '依据与适用范围'}</button>
+    {showEvidence && <div className="evidence-detail">
+      <strong>为什么推荐 · {({ literature: '文献支持', preference: '个人偏好', both: '文献与个人偏好' })[current.basis?.type] || '文献支持'}</strong>
+      {current.reason && <p>{current.reason}</p>}
+      {current.basis?.preferences?.map((preference, index) => <p key={index}>偏好来源：{preference.origin === 'confirmed_profile' ? '已确认且获授权的画像' : preference.origin === 'current_conversation' ? '本次对话' : '当前表达'} · {preference.content}</p>)}
+      <p>{current.adaptation}</p><p>{current.limitation}</p>
+      {(current.basis?.sources || (current.source ? [current.source] : [])).map(source => <p key={source.id || source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.title} · {source.publisher} · {source.year}</a>{source.review_scope && <small>{source.review_scope}</small>}</p>)}
+      {current.basis?.type === 'preference' && <p>此项根据个人喜好选择，不作为已有研究证实的疗效结论。</p>}
+    </div>}
+  </section>
 }
 
 function DiaryPage({ view = 'list', onCreated, diaries, saveEnabled, responsePreference, onRefresh, initialId, openVersion }) {

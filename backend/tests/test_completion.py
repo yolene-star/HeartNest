@@ -26,6 +26,7 @@ def test_diary_retrieval_permission_can_be_revoked(api):
 
 
 def test_confirmed_positive_preference_changes_ranking(api):
+    api.patch('/api/settings', json={'memory_enabled': True})
     api.post('/api/profile', json={'content': '阅读', 'type': '喜欢', 'confirmed': True})
     result = api.post('/api/recommendations', json={}).json()
     assert result['items'][0]['id'] == 'a4'
@@ -41,7 +42,7 @@ def test_unconfirmed_or_deleted_preferences_do_not_influence_rank(api):
 
 
 def test_recommendations_enforce_time_and_budget(api):
-    result = api.post('/api/recommendations', json={'time': '下午', 'budget': 0}).json()
+    result = api.post('/api/recommendations', json={'query': '想阅读', 'time': '下午', 'budget': 0}).json()
     assert [item['id'] for item in result['items']] == ['a4']
     assert api.post('/api/recommendations', json={'time': '今晚', 'budget': 0}).json()['items'] == []
 
@@ -54,6 +55,7 @@ def test_reject_is_temporary_until_explicitly_confirmed(api):
     profile = api.get('/api/profile').json()['items'][0]
     assert profile['type'] == '反感' and profile['confirmed']
     assert profile['source_feedback_id'] == response['id']
+    api.patch('/api/settings', json={'memory_enabled': True})
     assert all(x['type'] != '户外' for x in api.post('/api/recommendations', json={}).json()['items'])
 
 

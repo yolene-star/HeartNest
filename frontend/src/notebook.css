@@ -338,6 +338,11 @@ body{background:#eef0ea}
   .pet-selection .choose-pet { grid-row:5; }
 }
 .advice-history h4 { margin: 6px 0; }
+.advice-remember { display:flex;align-items:flex-start;gap:7px;font-size:12px;margin-top:12px;line-height:1.6; }
+.advice-remember input { flex:0 0 auto;margin-top:4px; }
+.advice-consent-note,.evidence-detail small { display:block;font-size:11px;line-height:1.6;color:#596952;margin-top:5px; }
+.evidence-detail { overflow-wrap:anywhere; }
+
 
 @media(max-width:1100px) {
   .companion-bookmark.floating-tools { position:fixed; z-index:25; left:24px; top:110px; width:48px; height:50px; min-width:48px; padding:5px 0 4px; gap:0; border:1px solid #bdccaa; border-radius:14px; background:#f5f7ec; box-shadow:0 3px 10px #43553420; touch-action:none; user-select:none; cursor:grab; }
