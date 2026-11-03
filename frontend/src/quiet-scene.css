@@ -1,0 +1,49 @@
+.quiet-active>.product-header,.quiet-active>.pet-dock,.quiet-active .nature-topline,.quiet-active .product-main>.success-alert{display:none!important}
+.quiet-mode{width:100vw;max-width:none!important;margin:0!important;position:fixed;inset:0;z-index:100;background:#f6f0e5;padding:0!important;overflow:hidden;color:#505e48}
+.quiet-mode>.welcome-strip,.quiet-mode .companion-aside{display:none!important}
+.quiet-scene{position:absolute;inset:0;overflow:hidden;isolation:isolate;color:#505e48;font-family:"Microsoft YaHei","PingFang SC",sans-serif}
+.quiet-background{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:70% center;z-index:-2}
+.quiet-header{position:absolute;top:max(24px,env(safe-area-inset-top));left:3%;right:3%;display:flex;justify-content:space-between;align-items:center;z-index:4}
+.quiet-scene button{font:inherit;color:inherit;cursor:pointer;min-height:44px;border:0;background:transparent}
+.quiet-scene button:focus-visible,.quiet-scene input:focus-visible{outline:2px solid #506b40;outline-offset:5px;border-radius:14px}
+.quiet-scene svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.quiet-return{display:flex;align-items:center;gap:10px;font-size:17px!important;letter-spacing:2px}
+.quiet-header>div{display:flex;align-items:center;gap:24px}
+.quiet-brand{font-family:"KaiTi","STKaiti",serif;font-size:29px;letter-spacing:4px}
+.quiet-motion{display:flex;align-items:center;gap:8px;font-size:12px!important;letter-spacing:1px}
+.quiet-motion svg{width:19px}
+.quiet-title{position:absolute;top:14%;left:0;right:0;text-align:center;pointer-events:none}
+.quiet-title h1{font-family:"KaiTi","STKaiti","Noto Serif SC",serif;font-size:clamp(32px,3.8vw,58px);font-weight:400;letter-spacing:.16em;margin:0 0 14px;color:#56614e}
+.quiet-title p{font-family:"KaiTi","STKaiti",serif;font-size:clamp(16px,1.8vw,25px);letter-spacing:.18em;color:#626e59;margin:0}
+.quiet-pet{position:absolute!important;left:70%;bottom:25%;width:clamp(130px,16vw,245px);height:clamp(130px,16vw,245px);padding:0;z-index:2;filter:drop-shadow(0 7px 5px #4c5a3a18)}
+.quiet-pet:before{content:"";position:absolute;left:16%;right:16%;bottom:4%;height:8%;background:#58633a24;border-radius:50%;filter:blur(5px);z-index:-1}
+.quiet-pet .sprite-pet,.quiet-pet .sprite-pet img,.quiet-pet>img{width:100%!important;height:100%!important;object-fit:contain;display:block;transform:none!important}
+.quiet-pet-message{position:absolute;left:71%;bottom:52%;padding:10px 17px;background:#fffaf0dc;border-radius:20px;color:#536048;font-size:13px;z-index:3}
+.quiet-bottom{position:absolute;bottom:max(5%,calc(env(safe-area-inset-bottom) + 18px));left:50%;transform:translateX(-50%);width:min(820px,83%);z-index:6;text-align:center;transition:opacity 1.2s}
+.quiet-toolbar{display:flex;align-items:center;justify-content:center;background:#fffaf0b8;border:1px solid #fff9;backdrop-filter:blur(9px);border-radius:50px;padding:13px 18px;box-shadow:0 5px 25px #5a664009}
+.quiet-toolbar button{display:flex;align-items:center;justify-content:center;gap:15px;flex:1;min-width:0;font-size:18px;letter-spacing:2px;padding:4px 14px;position:relative;border-radius:24px}
+.quiet-toolbar button+button:before{content:"";width:1px;height:27px;background:#74836435;position:absolute;left:0}
+.quiet-toolbar button:hover,.quiet-return:hover,.quiet-motion:hover{background:#fff7}
+.quiet-volume{display:flex;align-items:center;justify-content:center;gap:15px;width:max-content;margin:0 auto 12px;background:#fffaf0dd;padding:10px 20px;border-radius:25px;font-size:13px}
+.quiet-volume input{width:130px;accent-color:#718359}
+.quiet-sound-error{font-size:13px;background:#fffaf0ed;border-radius:20px;padding:12px}
+.quiet-ripples{position:absolute;left:7%;top:60%;width:40%;height:13%;pointer-events:none}
+.quiet-ripples i{position:absolute;top:10%;left:15%;width:15%;height:2px;border-radius:50%;background:#fff9;animation:quiet-water 9s ease-in-out infinite}
+.quiet-ripples i:nth-child(2){top:40%;left:48%;animation-delay:-3s;width:10%}.quiet-ripples i:nth-child(3){top:70%;left:25%;animation-delay:-6s;width:20%}
+@keyframes quiet-water{0%,100%{opacity:.15;transform:scaleX(.65)}50%{opacity:.65;transform:scaleX(1.15)}}
+.reduced-motion .quiet-ripples{display:none}.controls-resting .quiet-bottom{opacity:.25}.controls-resting .quiet-bottom:hover,.controls-resting .quiet-bottom:focus-within{opacity:1}
+.quiet-place-backdrop{position:absolute;inset:0;z-index:15;background:#39452e25;display:grid;place-items:center;padding:20px;backdrop-filter:blur(4px)}
+.quiet-place-picker{background:#fffcf3;border:1px solid #fff;border-radius:25px;width:min(470px,100%);padding:24px;box-shadow:0 20px 60px #24341d15}
+.quiet-place-picker>div{display:flex;align-items:center;justify-content:space-between;gap:10px}.quiet-place-picker h2{font-size:20px;font-weight:500;margin:0}.quiet-place-picker p{font-size:13px;line-height:1.8;color:#6a765e;margin:20px 0 0}
+.quiet-place-option{display:flex;align-items:center;gap:16px;margin-top:20px;width:100%;text-align:left;padding:12px!important;background:#edf1e3!important;border-radius:18px}
+.quiet-place-option img{width:105px;height:76px;object-fit:cover;border-radius:12px}.quiet-place-option span{flex:1;font-size:16px}.quiet-place-option span:last-child{flex:0}.quiet-place-option small{display:block;font-size:12px;line-height:1.8;margin-top:5px}
+.quiet-mode>.companion-grid{position:absolute;right:3%;top:13%;bottom:17%;width:min(440px,calc(100% - 40px));display:block!important;z-index:5;pointer-events:none}
+.quiet-mode .conversation-panel{display:none!important}.quiet-mode.quiet-chat-open .conversation-panel{display:flex!important;pointer-events:auto;width:100%;height:100%;min-height:0!important;max-height:none!important;background:#fffdf5ed;backdrop-filter:blur(12px);border:1px solid #fff;border-radius:25px;box-shadow:0 15px 70px #3246221a;margin:0;overflow:hidden}
+.quiet-mode .nature-chat-heading{padding:15px 18px;flex-shrink:0}.quiet-mode .nature-chat-heading>span:last-child{display:none}.quiet-chat-close{margin-left:auto;border:0;background:transparent;color:#526746;padding:10px;font-size:12px;cursor:pointer}
+.quiet-mode .conversation-scroll{min-height:0!important;flex:1;overflow-y:auto;padding:16px!important;overscroll-behavior:contain}.quiet-mode .conversation-empty{min-height:120px!important;padding:16px!important}.quiet-mode .conversation-empty .sprite-pet{display:none!important}
+.quiet-mode .composer{flex-shrink:0;margin:0 12px 12px;padding:12px}.quiet-mode .composer textarea{min-height:44px;max-height:100px}.quiet-mode .composer-footer{flex-wrap:wrap;gap:5px}.quiet-mode .composer-footer>span{display:none}.quiet-mode .send-mode{font-size:11px}.quiet-mode .chat-memory-note,.quiet-mode .chat-response-consent{font-size:11px;line-height:1.6}.quiet-mode .composer .primary-button{min-height:38px;padding:8px 15px}.quiet-mode .user-message{max-width:100%}
+.quiet-scene.with-chat .quiet-pet{left:28%;bottom:20%}.quiet-scene.with-chat .quiet-pet-message{left:26%}.quiet-scene.with-chat .quiet-title{left:3%;right:auto;top:17%;width:45%}.quiet-scene.with-chat .quiet-title h1{font-size:34px}
+@media(max-width:1000px){.quiet-scene.with-chat .quiet-title{display:none}.quiet-scene.with-chat .quiet-pet{left:10%;bottom:20%}.quiet-toolbar button{font-size:16px;gap:10px}.quiet-header>div{gap:12px}}
+@media(max-width:650px){.quiet-header{left:18px;right:18px;top:max(14px,env(safe-area-inset-top))}.quiet-return{font-size:13px!important;letter-spacing:0;gap:5px}.quiet-brand{font-size:22px;letter-spacing:2px}.quiet-motion{font-size:11px!important;gap:4px}.quiet-motion svg{width:16px}.quiet-title{top:17%}.quiet-title h1{font-size:35px;margin-bottom:15px}.quiet-title p{font-size:16px}.quiet-background{object-position:72% center}.quiet-pet{left:52%;bottom:25%;width:155px;height:155px}.quiet-pet-message{left:43%;bottom:47%}.quiet-bottom{width:calc(100% - 30px);bottom:max(28px,calc(env(safe-area-inset-bottom) + 16px))}.quiet-toolbar{padding:10px 6px}.quiet-toolbar button{font-size:13px;letter-spacing:0;gap:6px;padding:5px 7px}.quiet-toolbar svg{width:20px;height:20px}.quiet-toolbar button+button:before{height:22px}.quiet-mode>.companion-grid{top:85px;left:12px;right:12px;bottom:max(115px,calc(env(safe-area-inset-bottom) + 105px));width:auto}.quiet-mode .conversation-panel{border-radius:23px}.quiet-scene.with-chat .quiet-pet{visibility:hidden}.quiet-scene.with-chat .quiet-pet-message{display:none}.quiet-place-picker{padding:20px}.quiet-place-option{gap:10px}.quiet-place-option img{width:85px}.quiet-place-option span{font-size:14px}.quiet-mode .composer{padding:10px;margin-bottom:10px}.quiet-mode .chat-memory-note{margin:4px 0}.quiet-mode .chat-response-consent{min-height:26px}.quiet-mode .send-mode label{min-height:28px}}
+@media(max-height:600px){.quiet-title{top:18%}.quiet-title h1{font-size:30px;margin-bottom:8px}.quiet-title p{font-size:15px}.quiet-pet{width:115px;height:115px}.quiet-bottom{bottom:14px}.quiet-mode>.companion-grid{top:65px;bottom:95px}.quiet-mode .composer textarea{min-height:32px}.quiet-mode .chat-memory-note{display:none}.quiet-mode .chat-response-consent{min-height:20px}}
+@media(prefers-reduced-motion:reduce){.quiet-scene *{animation:none!important;transition:none!important}}

@@ -13,7 +13,9 @@ ADVICE_LIBRARY = {
             "url": "https://www.who.int/publications/i/item/9789240003927",
         },
         "limitation": "这是通用的自助压力应对练习，不保证适合每个人，也不是诊断或治疗方法；如果让你不舒服，可以马上停下。",
-        "review_status": "reviewed",
+        "review_status": "source-checked-adaptation",
+        "source_id": "who-stress-2020",
+        "adaptation": "依据 WHO 指南 Grounding 章节改写为简短中文提示，非原文或疗效验证。",
     }
 }
 
@@ -23,6 +25,45 @@ COMMUNICATION_SOURCE = {
     "url": "https://library.samhsa.gov/sites/default/files/tip-35-pep19-02-01-003.pdf",
 }
 
+# Adaptations of chapters "Unhooking" and "Acting on your values" of the
+# same WHO self-help guide; source support is not an efficacy claim for this app.
+for advice in [
+    {'id': 'name-the-feeling', 'title': '给感受起个名字', 'method': 'Unhooking',
+     'step': '如果愿意，试着在心里说一句：“我注意到自己正在感到……”。找不到准确的词也没关系，先让这种感受待一会儿。'},
+    {'id': 'one-small-step', 'title': '只选一件在意的小事', 'method': 'Acting on your values',
+     'step': '想一件你在意的事，选一个此刻做得到的小动作，比如给信任的人发一句问候。也可以先写下来，等有力气再做。'},
+    {'id': 'kind-to-yourself', 'title': '对自己温柔一点', 'method': 'Being kind',
+     'step': '如果是朋友正经历这些，你会对他说什么？愿意的话，也把那句温柔的话留给自己；不用勉强自己立刻好起来。'},
+]:
+    ADVICE_LIBRARY[advice['id']] = {**ADVICE_LIBRARY['grounding-pause'], **advice, 'review_status': 'source-linked-adaptation'}
+
+for item in ADVICE_LIBRARY.values():
+    item['adaptation'] = f"依据 WHO 指南 {item['method']} 章节作日常使用改编，短提示不是经过验证的治疗剂量。"
+
+ADVICE_LIBRARY.update({
+    'familiar-music': {
+        'id': 'familiar-music', 'title': '听一首自己喜欢的音乐', 'method': 'Preference-informed listening',
+        'step': '如果现在方便，可以选一首你喜欢的音乐，用舒服的音量听一会儿。不需要听完，不合适随时停下。',
+        'topic': 'music', 'requires_preference': True, 'source_id': 'music-review-2020',
+        'adaptation': '音乐干预综述支持候选方向；选择一首及自行聆听是产品改编，不等同于专业音乐治疗。',
+        'limitation': '研究条件和曲目各异，不保证这首音乐对你有效，也不承诺特定频率的效果。',
+    },
+    'small-drawing': {
+        'id': 'small-drawing', 'title': '随意画一点', 'method': 'Personal preference',
+        'step': '如果愿意，拿手边的笔随意画一点。不用画得像，也不用完成一张作品；不想画就停下。',
+        'topic': 'drawing', 'requires_preference': True,
+        'adaptation': '这是根据你明确喜好的日常活动选择，不作为已验证的减压干预。',
+        'limitation': '个人喜欢不等于有效；不宣称绘画治疗效果。',
+    },
+    'familiar-reading': {
+        'id': 'familiar-reading', 'title': '翻翻自己喜欢的书', 'method': 'Personal preference',
+        'step': '可以挑一本你喜欢的书，翻到想看的地方。没有阅读目标，不想看了就合上。',
+        'topic': 'reading', 'requires_preference': True,
+        'adaptation': '按你明确表达的阅读偏好提供日常选择，不作为治疗方法。',
+        'limitation': '不要求完成页数，也不保证能改变心情。',
+    },
+})
+
 
 def is_safety_signal(text: str) -> bool:
     direct_signals = ("想自杀", "想伤害自己", "准备伤害自己", "马上伤害自己", "想杀了", "准备伤害别人")
@@ -30,11 +71,23 @@ def is_safety_signal(text: str) -> bool:
     return any(signal in text for signal in direct_signals + indirect_signals)
 
 
-def build_companion_response(text: str, want_advice: bool, memories: list[dict] | None = None, memory_enabled: bool = False, response_preference: str = "adapt") -> dict:
+def is_history_request(text: str) -> bool:
+    """Conservative offline fallback: historical narration alone is not a request."""
+    import re
+    return bool(re.search(
+        r'你(?:还)?记得|(?:帮我|请你|能不能|可以).{0,6}(?:找|查|回忆)|'
+        r'(?:查找|检索|回顾|翻翻|找找).{0,12}(?:日记|记录|以前|之前|上次)|'
+        r'(?:我之前|我上次).{0,16}(?:说过什么|提过什么|喜欢什么)', text
+    ))
+
+
+def build_companion_response(text: str, want_advice: bool, memories: list[dict] | None = None, memory_enabled: bool = False, response_preference: str = "adapt", *, asks_about_history: bool | None = None, emotion: dict | None = None, exclude_advice_ids: list[str] | None = None, profiles=(), conversation=()) -> dict:
     from .main import classify_emotion
+    from .advice_policy import choose_advice, advice_declined, discomfort
 
     memories = memories or []
-    asks_about_history = any(term in text for term in ("之前", "上次", "以前", "记得", "提过", "说过"))
+    if asks_about_history is None:
+        asks_about_history = is_history_request(text)
     if is_safety_signal(text):
         return {
             "reply": "谢谢你告诉我这些。我有点担心你现在的安全。你此刻有马上伤害自己的打算，或者已经做了什么吗？如果有眼前危险，请尽快联系身边可信任的人陪着你，并联系所在地的紧急服务。",
@@ -73,13 +126,22 @@ def build_companion_response(text: str, want_advice: bool, memories: list[dict] 
             "memory_enabled": True,
         }
 
-    no_advice_requested = any(phrase in text for phrase in ("只想说", "只想吐槽", "不用建议", "别给建议", "不想要办法"))
+    no_advice_requested = advice_declined(text)
+    policy = None
     if no_advice_requested:
         reply = "好，那我们先不想办法。听起来这件事确实让你很不好受。你可以慢慢说，我听着。"
         suggestion = None
+    elif discomfort(text):
+        reply = '那就先停下这个办法，不用勉强继续。你现在感觉怎么样？愿意的话，我们可以先聊聊。'
+        suggestion = None
     elif want_advice:
-        suggestion = ADVICE_LIBRARY["grounding-pause"]
-        reply = suggestion["step"]
+        suggestion, policy = choose_advice(ADVICE_LIBRARY, text, profiles=profiles, memory_enabled=memory_enabled,
+                                          conversation=conversation, excluded=exclude_advice_ids or [])
+        reply = suggestion['step'] if suggestion else '这几个小办法都看过了，我们可以先停一停，或者聊聊你更需要什么。'
+        if policy['risk'] == 'restricted':
+            reply = '我听到你想放松，但不会推荐用饮酒、吸烟、赌博或擅自加药来缓解心情。' + reply
+        elif policy['risk'] == 'needs_context':
+            reply = '你提到它已经影响生活或想减少，我先不把继续做这件事当作放松办法。' + reply
     else:
         suggestion = None
         if any(term in text for term in ("事情堆", "好多事", "压力", "有点慌", "喘不过气")):
@@ -94,7 +156,7 @@ def build_companion_response(text: str, want_advice: bool, memories: list[dict] 
         else:
             reply = "我听见你在说这件事。你现在最希望我先理解哪一部分？"
 
-    emotion = classify_emotion(text)
+    emotion = emotion or classify_emotion(text)
     return {
         "reply": reply,
         "emotion_suggestion": None if want_advice else {"label": emotion["label"], "status": "unconfirmed"},
@@ -103,4 +165,5 @@ def build_companion_response(text: str, want_advice: bool, memories: list[dict] 
         "memories": [],
         "memory_enabled": memory_enabled,
         "communication_source": COMMUNICATION_SOURCE,
+        "advice_policy": policy,
     }

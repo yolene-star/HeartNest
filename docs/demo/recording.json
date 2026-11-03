@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "mode": "offline-rules",
+  "description": "实际网页无声操作录屏；只使用模拟内容，不冒充真实模型演示。",
+  "errors": [],
+  "video_bytes": 3513571
+}

@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "checks": [
+    "temporary chat receives a real reply without persisting",
+    "save selection still replies, stores source and is retrievable; corrected emotion persists",
+    "manual opt-in stores original and global retrieval switch remains authoritative",
+    "save failure preserves reply and original; manual retry persists once",
+    "save disabled still replies; 390/785/1440 layouts fit"
+  ],
+  "errors": []
+}

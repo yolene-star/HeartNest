@@ -1,0 +1,79 @@
+[
+  {
+    "key": "chat-context-length",
+    "title": "[P1] 统一长消息与多轮上下文长度，修复下一轮聊天 422",
+    "body": "关联 PRD：#1（自然聊天、多轮临时上下文、失败可恢复）。\n\n## 已核对的缺口\n`CompanionIn.text` 允许 4000 字，但 `ConversationTurn.content` 只允许 2000 字；前端把原消息完整加入后续 conversation。发送一条 2001 字以上的消息后，下一轮可能被历史字段校验拦截。\n\n隔离 Docker 已复现：当前消息“继续聊聊”，历史 user.content 为 2001 字，接口返回 422，错误定位 body.conversation.0.content；未调用在线模型。\n\n## 验收标准\n- [ ] 统一前后端长度约定，明确超长历史截断/摘要策略，不静默截掉用户当前输入。\n- [ ] 覆盖 2000、2001、4000 字消息后的连续多轮、建议请求及失败恢复。\n- [ ] 既有聊天记忆与湖边共享聊天回归通过。\n- [ ] Docker 实页复测并查看截图。\n\n复现脚本：`frontend/tests/prd-gap-audit.mjs`；记录：`docs/issue-drafts/prd-audit/results.json`。本 Issue 记录未修复问题，不代表已经验收通过。",
+    "issue_number": 18,
+    "url": "https://github.com/yolene-star/HeartNest/issues/18"
+  },
+  {
+    "key": "chat-retry",
+    "title": "[P1] 为失败的聊天消息提供直接重试，保留原消息与保存选择",
+    "body": "关联 PRD：#1（每条消息有回应、失败保留原文并可重试）。\n\n## 已核对的缺口\n前端 send 在请求前清空输入框；接口失败后原消息仍在聊天中，但只显示“可以重试”的提示，没有重新发送操作，发送按钮因草稿为空而禁用。隔离 Docker 使用 503 模拟响应已复现。\n\n## 验收标准\n- [ ] 失败消息显示明确状态和可点击的重试操作，不要求用户复制原文。\n- [ ] 重试同一轮，避免重复用户气泡、重复回应和重复保存。\n- [ ] 保留该次是否保存原话/回应的选择；重试失败仍可恢复。\n- [ ] 覆盖普通聊天、湖边聊天和请求小练习；保持不保存模式不落库。\n- [ ] Docker 实页回环、自动化和截图检查。\n\n复现脚本：`frontend/tests/prd-gap-audit.mjs`；截图：`docs/issue-drafts/prd-audit/missing-chat-retry.png`（模拟文本，仅本地）。",
+    "issue_number": 19,
+    "url": "https://github.com/yolene-star/HeartNest/issues/19"
+  },
+  {
+    "key": "fallback-status",
+    "title": "[P1] 在规则回退时清楚说明回应来源，区分理解与回复状态",
+    "body": "关联 PRD：#1（可选 DeepSeek、本地规则回退并说明来源）。\n\n## 已核对的缺口\n后端提供 llm_used、understanding_source 及情绪 analysis_source，但前端聊天消息未保留或展示这些状态。隔离 Docker 模拟 llm_used=false / understanding_source=rules 后，页面仍只显示“陪伴中”。\n\n## 验收标准\n- [ ] 正常 LLM、未配置/关闭、超时或异常回退具有准确且不打扰聊天的说明。\n- [ ] 区分情绪理解来源和自然回复来源；记忆检索与来源库建议不被误标为模型故障。\n- [ ] 不泄露密钥、供应商原始异常、请求头或用户文本。\n- [ ] 通过实际接口/模拟响应分别测试混合状态与恢复。\n- [ ] Docker 实页及手机截图核查。\n\n复现脚本：`frontend/tests/prd-gap-audit.mjs`；截图：`docs/issue-drafts/prd-audit/missing-fallback-status.png`。",
+    "issue_number": 20,
+    "url": "https://github.com/yolene-star/HeartNest/issues/20"
+  },
+  {
+    "key": "communication-evidence",
+    "title": "[P1] 将可核查的沟通原则落实到 LLM 约束与评审用例",
+    "body": "关联 PRD：#1（自然交流与有依据的建议）。\n\n## 当前差距\n建议库已有 WHO 来源，离线回应包含 COMMUNICATION_SOURCE（SAMHSA TIP 35）。但在线 request_llm_reply 的提示目前只有自然、温和、先回应感受等通用要求，未把来源原则整理为明确的行为约束与验收映射；不能据此宣称在线话术已经完成有依据的约束验收。\n\n## 验收标准\n- [ ] 整理“来源/章节 → 可采用原则 → 回复行为 → 不适用边界”的简短对照，说明专业治疗语境与日常陪伴原型的区别。\n- [ ] 将经人工认可的原则写入模型约束，保持自然语言表达，不要求每句话引用论文。\n- [ ] 用模拟场景评审倾诉、积极分享、复杂情绪、拒绝建议、用户纠正等行为，记录失败和改进。\n- [ ] 区分沟通原则依据、练习依据和本产品有效性；不制造诊疗或疗效声明。\n- [ ] 保留可复跑验证，在线小样本评审与离线单元测试分别说明。\n\n代码依据：`backend/app/content.py` 的 COMMUNICATION_SOURCE 与 `backend/app/llm.py` 的 request_llm_reply。属于部分实现待补齐，不是重新开发建议库。",
+    "issue_number": 21,
+    "url": "https://github.com/yolene-star/HeartNest/issues/21"
+  },
+  {
+    "key": "content-review",
+    "title": "[验收] 人工审核新增自助练习文案和陪伴到放松的整体流程",
+    "body": "关联 PRD：#1；与场景技术记录 #13、最终材料 #16 配合。\n\n## 未完成项\n自动化已验证建议接口、来源展开和湖边往返，但尚无用户对新增练习文案与整体体验的最终验收记录。用户曾明确要求正式提交前先人工审核，不以本 Issue 发布等同于验收完成。\n\n## 验收标准\n- [ ] 人工逐项核对 4 种练习原文、出处、改编范围、局限和可停止说明。\n- [ ] 体验“正常聊天 → 一次轻邀请 → 接受/拒绝 → 湖边/练习 → 回到聊天”。\n- [ ] 核查聊天始终回应、记忆保存单独选择、临时聊天不自动落库。\n- [ ] 确认整体保持陪伴为主，无强制任务、计时、打卡或离场评价。\n- [ ] 记录审核日期、结论、需改问题和复测结果，经用户确认后才标记完成。\n\n本地参考：`docs/design/quiet-companionship.md`、`docs/design/relaxation-flow.md`、`docs/issue-drafts/00-PRD.md`。",
+    "issue_number": 22,
+    "url": "https://github.com/yolene-star/HeartNest/issues/22"
+  },
+  {
+    "key": "physical-mobile",
+    "title": "[验收] 使用实体手机检查软键盘、聊天输入和湖边返回",
+    "body": "关联 PRD：#1（手机关键操作无遮挡）。\n\n## 未完成项\n390/785/1440 宽度的浏览器模拟与截图已有记录，但不能替代实体手机软键盘、浏览器工具栏和安全区域的体验。\n\n## 验收标准\n- [ ] 记录设备、系统、浏览器和测试时间；至少在一台实际手机验证。\n- [ ] 普通聊天和湖边聊天展开键盘后，输入框与发送可见且可点击。\n- [ ] 关闭键盘、切换横竖屏、收起聊天、返回陪伴后布局与草稿正常。\n- [ ] 日历详情、日记编辑/补充/删除、活动反馈不被底栏遮挡。\n- [ ] 出现问题留截图/录屏，修复后重复原路径；无实机记录不勾完成。\n\n此项是设备验收，不代表已有浏览器测试失败。",
+    "issue_number": 23,
+    "url": "https://github.com/yolene-star/HeartNest/issues/23"
+  },
+  {
+    "key": "audio-review",
+    "title": "[验收] 核对安静空间真实声音听感及后台停音",
+    "body": "关联 PRD：#1（默认静音、自主开启、离开或后台停止）。\n\n## 未完成项\n已有浏览器 AudioContext 开关和关闭的自动化验证，但尚未完成真实扬声器/耳机听感的人工验收。当前声音为 Web Audio 本地合成环境声，不能宣传为湖水实地录音。\n\n## 验收标准\n- [ ] 真实播放检查音量、循环衔接、杂音和开启/关闭突变，可随时调低或关闭。\n- [ ] 默认静音，重新进入场景不自动播放。\n- [ ] 实际浏览器切后台、离开场景后停音，恢复页面不意外自动播放。\n- [ ] 覆盖系统/浏览器阻止音频的错误提示与重试行为。\n- [ ] 记录设备、浏览器、结果和需要改进的问题。\n\n技术参考：`frontend/src/QuietScene.jsx`、`frontend/tests/quiet-scene.mjs`。",
+    "issue_number": 24,
+    "url": "https://github.com/yolene-star/HeartNest/issues/24"
+  },
+  {
+    "key": "onboarding-short",
+    "title": "[后续可选] 精简首次使用流程，允许跳过轻量偏好设置",
+    "body": "关联 PRD：#1（边界与后续项）；不作为本版提交阻塞。\n\n当前已有宠物自我介绍、形象选择、昵称留空及沟通偏好，但仍是三步流程，尚未进一步精简。\n\n- [ ] 保留“先听宠物自我介绍，再选喜欢的伙伴”，不先要求回答抽象聊天风格问卷。\n- [ ] 将昵称与一个轻量偏好做成可跳过步骤，直接开始陪伴。\n- [ ] 跳过时保留合理默认值，记忆调用默认关闭；之后可在“我的”修改。\n- [ ] 用户先验收交互方案，再实施并执行 Docker、首次使用及手机截图回归。\n\n这是体验优化，不将现有昵称可留空误报为尚未实现。",
+    "issue_number": 25,
+    "url": "https://github.com/yolene-star/HeartNest/issues/25"
+  },
+  {
+    "key": "more-scenes",
+    "title": "[后续可选] 扩展森林或窗边等简洁手绘安静场景",
+    "body": "关联 PRD：#1（安静陪伴后续场景）；不作为本版提交阻塞。\n\n当前仅湖边发呆可用，“换个地方”不得展示尚未交付的可进入选项。\n\n- [ ] 与用户确认下一种场景及参考图，再制作简洁、留白充分的纯风景。\n- [ ] 不修改既有宠物设计；确保桌面与手机裁切、宠物落点和聊天位置合理。\n- [ ] 切换场景不清空聊天/草稿、不新增记录、不自动开启声音。\n- [ ] 不引入强制计时、打卡、任务或效果评分。\n- [ ] 每新增一个实际可用场景后再加入选择列表，Docker 实页与截图验收。\n\n无需为本任务接入地图或联网探店。",
+    "issue_number": 26,
+    "url": "https://github.com/yolene-star/HeartNest/issues/26"
+  },
+  {
+    "key": "semantic-invite",
+    "title": "[后续可选] 用受约束的语义理解改善放松邀请命中",
+    "body": "关联 PRD：#1（一次轻邀请后续优化）；不作为本版提交阻塞。\n\n当前保守正则支持明确的休息/放松请求，尚无独立 LLM 邀请意图分类。未命中仍有手动入口，不能把它描述成已经具备全面语义识别。\n\n- [ ] 先整理同义表达、否定、引用、历史叙述、倾诉限定和积极分享的评审样例。\n- [ ] 在明确需求后增加可校验的意图结果，模型不得决定记忆授权或自动跳转。\n- [ ] 保留一次邀请、拒绝后不重复、安全优先与手动入口。\n- [ ] 模型失败时退回现有保守规则；分别报告误邀与漏邀。\n- [ ] 人工验收表达与触发边界后上线，不以情绪标签替代邀请意图。",
+    "issue_number": 27,
+    "url": "https://github.com/yolene-star/HeartNest/issues/27"
+  },
+  {
+    "key": "cross-session",
+    "title": "[后续可选] 明确陪伴对话与拒绝邀请是否需要跨页面或会话延续",
+    "body": "关联 PRD：#1（当前页面对话边界）；先设计决策，不作为本版提交阻塞。\n\n当前聊天和一次邀请状态只在陪伴页挂载期间保留，进入湖边不丢失；刷新或离开陪伴页后重置。跨会话延续尚未设计或实现，PRD 已明确不承诺该能力。\n\n- [ ] 先与用户确认需要保留的是短期对话、拒绝状态还是两者，以及生命周期。\n- [ ] 保持“不保存到 Agent 记忆库”的含义，不擅自将临时聊天写入长期库。\n- [ ] 如选择本地短期持久化，明确保留时长、清除操作与共享设备边界；如不实现，保留明确边界说明。\n- [ ] 验收跨页面、刷新、重新打开和隐私撤回；继续保证湖边往返的现有连续性。\n\n不能将本条勾选为“已要求永久保存拒绝”，也不以此推导用户长期偏好。",
+    "issue_number": 28,
+    "url": "https://github.com/yolene-star/HeartNest/issues/28"
+  }
+]

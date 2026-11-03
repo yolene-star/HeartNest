@@ -1,0 +1,25 @@
+{
+  "scope": "standalone-design-preview-only",
+  "checks": [
+    "390px companion: visible, no overflow",
+    "390px diary: visible, no overflow",
+    "390px review: visible, no overflow",
+    "390px profile: visible, no overflow",
+    "768px companion: visible, no overflow",
+    "768px diary: visible, no overflow",
+    "768px review: visible, no overflow",
+    "768px profile: visible, no overflow",
+    "1024px companion: visible, no overflow",
+    "1024px diary: visible, no overflow",
+    "1024px review: visible, no overflow",
+    "1024px profile: visible, no overflow",
+    "1440px companion: visible, no overflow",
+    "1440px diary: visible, no overflow",
+    "1440px review: visible, no overflow",
+    "1440px profile: visible, no overflow",
+    "calendar selection, empty state, list-to-detail, edit dialog and preview switch work",
+    "no browser JavaScript errors; all existing pet images load"
+  ],
+  "errors": [],
+  "passed": true
+}

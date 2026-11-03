@@ -1,0 +1,135 @@
+{
+  "mode": "local-offline-real-api",
+  "started_at": "2026-11-02T06:29:55.620Z",
+  "checks": [
+    {
+      "name": "8 diary texts and dates preserved",
+      "passed": true
+    },
+    {
+      "name": "positive diary recognition",
+      "passed": true
+    },
+    {
+      "name": "all diary emotions match reviewed meaning",
+      "passed": false,
+      "error": "Mismatched samples: synthetic-002, synthetic-003, synthetic-004, synthetic-005, synthetic-006\n\n5 !== 0\n"
+    },
+    {
+      "name": "diary narration is not treated as a history request",
+      "passed": false,
+      "error": "Unexpected history replies: synthetic-005, synthetic-006, synthetic-007, synthetic-008\n\n4 !== 0\n"
+    },
+    {
+      "name": "calendar uses confirmed labels",
+      "passed": true
+    },
+    {
+      "name": "related memory contains source and date",
+      "passed": true
+    },
+    {
+      "name": "unrelated memory is empty",
+      "passed": true
+    },
+    {
+      "name": "memory off prevents citations",
+      "passed": true
+    },
+    {
+      "name": "positive calendar and full diary visible",
+      "passed": true
+    },
+    {
+      "name": "edit and addendum persist after reload",
+      "passed": true
+    },
+    {
+      "name": "mobile calendar fits viewport",
+      "passed": true
+    },
+    {
+      "name": "deleted diary leaves search and calendar",
+      "passed": true
+    },
+    {
+      "name": "no browser exceptions",
+      "passed": true
+    }
+  ],
+  "samples": [
+    {
+      "source_id": "synthetic-001",
+      "id": "38d70b455c",
+      "expected": "焦虑",
+      "predicted": "焦虑",
+      "reply": "我听见你在说这件事。你现在最希望我先理解哪一部分？",
+      "llm_used": false,
+      "date": "2026-10-28"
+    },
+    {
+      "source_id": "synthetic-002",
+      "id": "943a7b1e19",
+      "expected": "低落",
+      "predicted": "开心",
+      "reply": "听起来你今天消耗不少。你愿意说说，是哪件事最让你觉得累吗？",
+      "llm_used": false,
+      "date": "2026-10-30"
+    },
+    {
+      "source_id": "synthetic-003",
+      "id": "1237ce2a6f",
+      "expected": "疲惫",
+      "predicted": "开心",
+      "reply": "听起来你今天消耗不少。你愿意说说，是哪件事最让你觉得累吗？",
+      "llm_used": false,
+      "date": "2026-11-01"
+    },
+    {
+      "source_id": "synthetic-004",
+      "id": "720d702fae",
+      "expected": "混合/说不清",
+      "predicted": "焦虑",
+      "reply": "事情一下子挤过来，确实容易让人觉得慌。现在最占你心思的是哪一件？",
+      "llm_used": false,
+      "date": "2026-11-03"
+    },
+    {
+      "source_id": "synthetic-005",
+      "id": "8b320d049c",
+      "expected": "低落",
+      "predicted": "开心",
+      "reply": "我找到了一些你保存过的相关记录，下面会标出原文和日期。",
+      "llm_used": false,
+      "date": "2026-11-05"
+    },
+    {
+      "source_id": "synthetic-006",
+      "id": "6064fae3fd",
+      "expected": "平稳",
+      "predicted": "开心",
+      "reply": "我找到了一些你保存过的相关记录，下面会标出原文和日期。",
+      "llm_used": false,
+      "date": "2026-11-07"
+    },
+    {
+      "source_id": "synthetic-007",
+      "id": "7defc689a6",
+      "expected": "开心",
+      "predicted": "开心",
+      "reply": "我找到了一些你保存过的相关记录，下面会标出原文和日期。",
+      "llm_used": false,
+      "date": "2026-11-09"
+    },
+    {
+      "source_id": "synthetic-008",
+      "id": "9c453b2514",
+      "expected": "积极",
+      "predicted": "开心",
+      "reply": "我找到了一些你保存过的相关记录，下面会标出原文和日期。",
+      "llm_used": false,
+      "date": "2026-11-11"
+    }
+  ],
+  "page_errors": []
+}

@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checks": [
+    "four viewport sizes, all four pages",
+    "fixed stationery header/footer",
+    "companion fits without outer scrolling",
+    "composer fully visible",
+    "long settings content reachable",
+    "quiet scene return"
+  ],
+  "errors": []
+}

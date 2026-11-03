@@ -1,0 +1,140 @@
+import { chromium } from '@playwright/test'
+import fs from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+import assert from 'node:assert/strict'
+
+const base = process.env.TEST_URL || 'http://127.0.0.1:18080'
+assert(new URL(base).port === '18080', 'Use isolated acceptance instance, not the default user database')
+const output = new URL('../../docs/design/product-validation/', import.meta.url)
+await fs.mkdir(output, { recursive: true })
+const browser = await chromium.launch({ channel: 'msedge', headless: true })
+const result = { checks: [], errors: [] }
+const ids = []
+let originalSettings
+async function api(path, method = 'GET', body) {
+  const response = await fetch(`${base}/api${path}`, { method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(60000) })
+  assert(response.ok, `${method} ${path}: ${response.status}`)
+  return response.json()
+}
+try {
+  originalSettings = await api('/settings')
+  await api('/settings', 'PATCH', { onboarding_complete: true, save_enabled: true, memory_enabled: false, pet_id: 'otter' })
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+  page.on('pageerror', error => result.errors.push(error.message))
+  await page.goto(base)
+  await page.locator('.primary-nav').waitFor()
+  assert.equal(await page.locator('.primary-nav button').count(), 4)
+  assert.deepEqual(await page.locator('.primary-nav button').allTextContents(), ['陪伴', '日记', '回顾', '我的'])
+  result.checks.push('four real navigation destinations')
+  const stamp = new Date().toISOString().slice(0, 10)
+  for (const [text, label] of [['自然界面验收：完成展示后的快乐。', '积极'], ['自然界面验收：平稳而轻松的一天。', '平稳']]) {
+    const item = await api('/diaries', 'POST', { text, emotion_label: label, recorded_at: `${stamp}T12:00:00` })
+    ids.push(item.id)
+  }
+  await page.reload()
+  await page.getByRole('button', { name: '日记', exact: true }).click()
+  await page.getByRole('tab', { name: '心情日历', exact: true }).waitFor()
+  const cell = page.locator('.calendar-cell').filter({ has: page.locator('.calendar-number', { hasText: new RegExp(`^${Number(stamp.slice(-2))}$`) }) })
+  await cell.click()
+  await page.locator('.calendar-diary').filter({ hasText: '自然界面验收：平稳而轻松' }).waitFor()
+  assert.equal(await cell.locator('.mood-face').count() >= 2, true)
+  await page.locator('.calendar-diary').filter({ hasText: '自然界面验收：平稳而轻松' }).getByRole('button', { name: '打开这篇日记' }).click()
+  await page.locator('.entry-original').filter({ hasText: '自然界面验收：平稳而轻松的一天。' }).waitFor()
+  assert.equal(await page.locator('#journal-draft').count(), 0)
+  await page.getByRole('button', { name: '＋ 写日记', exact: true }).click()
+  await page.locator('#journal-draft').fill('尚未保存的新日记草稿')
+  await page.getByRole('button', { name: '返回日记列表', exact: true }).click()
+  await page.locator('.diary-row').filter({ hasText: '自然界面验收：平稳而轻松的一天。' }).click()
+  await page.getByRole('button', { name: '编辑记录', exact: true }).click()
+  await page.locator('#diary-original').fill('自然界面验收：编辑后的平稳记录。')
+  await page.getByRole('button', { name: '保存修改', exact: true }).click()
+  await page.locator('.entry-original').filter({ hasText: '编辑后的平稳记录' }).waitFor()
+  assert.equal(await page.locator('#journal-draft').count(), 0)
+  await page.locator('#diary-supplement').fill('后来补充：独立保存的备注。')
+  await page.getByRole('button', { name: '添加补充', exact: true }).click()
+  await page.locator('.addendum').filter({ hasText: '独立保存的备注' }).waitFor()
+  await page.screenshot({ path: fileURLToPath(new URL('1440-diary-edit.png', output)), fullPage: true })
+  result.checks.push('calendar deep link, independent create/edit drafts and addendum persistence')
+  await page.getByRole('button', { name: '＋ 写日记', exact: true }).click()
+  assert.equal(await page.locator('.entry-original').count(), 0)
+  assert.equal(await page.locator('#journal-draft').inputValue(), '尚未保存的新日记草稿')
+  await page.getByRole('button', { name: '保存日记', exact: true }).click()
+  await page.locator('.entry-original').filter({ hasText: '尚未保存的新日记草稿' }).waitFor()
+  const created = (await api('/diaries')).items.find(item => item.text === '尚未保存的新日记草稿')
+  assert(created); ids.push(created.id)
+  await page.locator('.emotion-choices').getByRole('button', { name: '开心', exact: true }).click()
+  await page.locator('.confirmed-emotion').filter({ hasText: '开心' }).waitFor()
+  await page.getByRole('button', { name: '删除', exact: true }).click()
+  await page.getByRole('button', { name: '确认删除', exact: true }).click()
+  await page.locator('.detail-empty').waitFor()
+  assert(!(await api('/diaries')).items.some(item => item.id === created.id))
+  await page.getByRole('tab', { name: '心情日历' }).click()
+  await page.getByRole('button', { name: '上个月', exact: true }).click()
+  await page.locator('.calendar-cell').first().click()
+  await page.locator('.detail-empty').filter({ hasText: '没有确认过' }).waitFor()
+  await page.getByRole('button', { name: '下个月', exact: true }).click()
+  result.checks.push('write action preserves draft, create/confirm/delete and empty month selection')
+
+  await page.getByRole('button', { name: '我的', exact: true }).click()
+  const memory = page.getByRole('switch', { name: '允许心栖在聊天时查找旧日记' })
+  await memory.click()
+  await page.waitForFunction(() => document.querySelector('[role=switch][aria-label="允许心栖在聊天时查找旧日记"]')?.getAttribute('aria-checked') === 'true')
+  assert.equal((await api('/settings')).memory_enabled, true)
+  await memory.click()
+  await page.waitForFunction(() => document.querySelector('[role=switch][aria-label="允许心栖在聊天时查找旧日记"]')?.getAttribute('aria-checked') === 'false')
+  result.checks.push('real privacy switches persist')
+  await page.getByRole('button', { name: '陪伴', exact: true }).click()
+  await page.locator('#chat-message').fill('今天完成展示很开心。')
+  await page.getByRole('button', { name: '发送', exact: true }).click()
+  await page.getByTestId('assistant-reply').waitFor({ timeout: 60000 })
+  assert.equal((await api('/diaries')).items.some(item => item.text === '今天完成展示很开心。'), false)
+  result.checks.push('real companion reply, no automatic diary save')
+  for (const width of [390, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 })
+    for (const [name, slug] of [['陪伴', 'companion'], ['日记', 'diary'], ['回顾', 'review'], ['我的', 'profile']]) {
+      await page.getByRole('button', { name, exact: true }).click()
+      if (name === '日记') await page.locator('.calendar-toolbar strong').waitFor()
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width} ${name} overflow`)
+      if (width === 390 && name === '陪伴') {
+        const text = await page.locator('.welcome-strip h1').boundingBox()
+        const button = await page.locator('.welcome-actions button').first().boundingBox()
+        assert(text.y + text.height <= button.y, 'Compact hero heading must not overlap chat action')
+        await page.locator('#chat-message').scrollIntoViewIfNeeded()
+        await page.locator('#chat-message').fill('手机输入检查')
+        await page.screenshot({ path: fileURLToPath(new URL('390-composer.png', output)) })
+        await page.locator('#chat-message').fill('')
+        await page.evaluate(() => scrollTo(0, 0))
+      }
+      if (width === 390) {
+        assert(!(await page.getByTestId('pet-dock').isVisible()), 'Floating pet must not cover mobile controls')
+        assert(await page.locator('.nav-pet').isVisible())
+      }
+      await page.mouse.move(0, 0)
+      if ([390, 1440].includes(width)) await page.screenshot({ path: fileURLToPath(new URL(`${width}-${slug}.png`, output)), fullPage: width !== 390, animations: 'disabled' })
+    }
+    result.checks.push(`${width}px: all four pages fit; mobile pet stays in navigation`)
+  }
+  await page.getByRole('button', { name: '陪伴', exact: true }).click()
+  const dock = page.getByTestId('pet-dock')
+  const before = await dock.boundingBox()
+  await page.mouse.move(before.x + before.width / 2, before.y + 8)
+  await page.mouse.down()
+  await page.mouse.move(before.x + before.width / 2 - 140, before.y - 92, { steps: 12 })
+  await page.mouse.up()
+  const after = await dock.boundingBox()
+  assert(Math.abs(after.x - before.x) > 80 && Math.abs(after.y - before.y) > 50)
+  await page.reload()
+  await dock.waitFor()
+  const restored = await dock.boundingBox()
+  assert(Math.abs(restored.x - after.x) < 2 && Math.abs(restored.y - after.y) < 2)
+  result.checks.push('desktop pet drag and position persistence')
+  assert.deepEqual(result.errors, [])
+  result.passed = true
+  console.log(`PASS ${result.checks.length} real product scenarios`)
+} catch (error) { result.passed = false; result.failure = error.stack; console.error(error); process.exitCode = 1 }
+finally {
+  if (originalSettings) await api('/settings', 'PATCH', originalSettings).catch(() => {})
+  for (const id of ids) await api(`/diaries/${id}`, 'DELETE').catch(() => {})
+  await browser.close()
+  await fs.writeFile(new URL('results.json', output), JSON.stringify(result, null, 2))
+}

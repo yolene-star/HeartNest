@@ -1,13 +1,13 @@
 # 验证状态
 
-验证日期：2026-10-27。环境：Docker Desktop / Linux containers，Python 3.11，Node 24。
+当前验证日期：2026-11-02。环境：Docker Desktop / Linux containers，Python 3.11，Node 24，Edge + Playwright。
 
-- `docker compose config --quiet`：通过。
-- `docker compose build`：前后端镜像构建通过。
-- `docker compose up -d --wait`：前后端均 healthy。
-- 容器内隔离测试：7 passed；第三方 Starlette/AnyIO 弃用警告 1 条。
-- 前端 Nginx `/api/health`：200，成功访问后端。
-- 前端 `/docs`：200，接口文档代理可用。
-- 模拟文本分类评估：12 条训练、12 条独立测试，两模型准确率 0.5、宏平均 F1 约 0.493，各输出 6 个错例；仅验证评估流程。
+- Docker 从零重新安装依赖并构建成功，空卷启动后完整后端52项通过（1条第三方弃用警告）。
+- 五套顺序浏览器回归通过：四页与日历、活动/画像反馈、聊天保存、七天时间图和跨日记状态隔离。截图已经打开检查。
+- 真实 DeepSeek：本轮新调用8篇经审核的模拟日记，8/8情绪标签匹配；15/15项检查通过，零页面异常。这是小样本验收，不能视为泛化效果。
+- 默认8080实例已更新，部署前后14篇日记、2条画像ID一致；四页只读冒烟通过。
+- 公开中文混合语料：3321训练、831测试；LR准确率0.8592/宏F1 0.8574，SVM准确率0.8736/宏F1 0.8719。已输出混淆矩阵、每类指标和各20个错例；源数据含AI文本。
+- 原微型模拟实验保留：12训练/12测试，两模型准确率0.5、宏F1约0.493，各6个错例，不与公开数据或在线模型混报。
+- 备用真实操作录屏位于docs/demo/，无声、离线规则、模拟内容。汇报Word/PDF和PPT按用户要求暂不制作。
 
-尚未执行的手工演示、公开数据实验和浏览器场景不能视为已通过。详见 DOCKER.md 中的当前范围。
+详细证据及局限见 [本轮验收](completion-validation/README.md)、[公开分类](public-classification/README.md)和[运行说明](DOCKER.md)。PRD/Issue尚待用户人工验收，未发布、提交或推送。

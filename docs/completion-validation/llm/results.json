@@ -1,0 +1,174 @@
+{
+  "mode": "docker-live-llm",
+  "started_at": "2026-11-02T09:36:18.938Z",
+  "checks": [
+    {
+      "name": "8 diary texts and dates preserved",
+      "passed": true
+    },
+    {
+      "name": "positive diary recognition",
+      "passed": true
+    },
+    {
+      "name": "all diary emotions match reviewed meaning",
+      "passed": true
+    },
+    {
+      "name": "diary narration is not treated as a history request",
+      "passed": true
+    },
+    {
+      "name": "all analyses and replies actually use llm",
+      "passed": true
+    },
+    {
+      "name": "calendar uses confirmed labels",
+      "passed": true
+    },
+    {
+      "name": "related memory contains source and date",
+      "passed": true
+    },
+    {
+      "name": "unrelated memory is empty",
+      "passed": true
+    },
+    {
+      "name": "memory off prevents citations",
+      "passed": true
+    },
+    {
+      "name": "browser can share happiness with llm",
+      "passed": true
+    },
+    {
+      "name": "positive calendar and full diary visible",
+      "passed": true
+    },
+    {
+      "name": "edit and addendum persist after reload",
+      "passed": true
+    },
+    {
+      "name": "mobile calendar fits viewport",
+      "passed": true
+    },
+    {
+      "name": "deleted diary leaves search and calendar",
+      "passed": true
+    },
+    {
+      "name": "no browser exceptions",
+      "passed": true
+    }
+  ],
+  "samples": [
+    {
+      "source_id": "synthetic-001",
+      "id": "f9b23dc678",
+      "expected": "焦虑",
+      "predicted": "焦虑",
+      "analysis_source": "llm",
+      "reason": "文本多次出现紧张、担心演示出错、时间不够，虽经拆解任务后略有缓解，但结尾明确说现在还是焦虑，主导感受为焦虑。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "今天这一整天，你其实一直在往前挪——从早上想合上电脑，到整理完字段发现没那么乱，再到拆成三块、完成一块，焦虑慢慢有了具体的形状。这种“来不及”的感觉还压着，但你已经能分清它是在催你，而不是在说明真相。明天先做第二块，这个节奏听起来是稳的。",
+      "llm_used": true,
+      "date": "2026-10-28"
+    },
+    {
+      "source_id": "synthetic-002",
+      "id": "1013246d9e",
+      "expected": "低落",
+      "predicted": "低落",
+      "analysis_source": "llm",
+      "reason": "不想说话、空落落、解释状态很累，整体偏低落；结尾自我照顾带来轻微缓和，但主导仍是低落而非混合。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "听你说到手指停在输入框上很久，那种想靠近又觉得解释起来太累的感觉，我好像能懂一点。你没有生谁的气，只是暂时没有力气把自己摊开给别人看，这本身并不奇怪。晚上那杯热水、写下的那两件小事，像是你在安静地接住自己——被陪伴有时候确实可以这么轻。此刻你更想就这样被听着，还是想和我一起看看这份空落落是从哪儿来的？",
+      "llm_used": true,
+      "date": "2026-10-30"
+    },
+    {
+      "source_id": "synthetic-003",
+      "id": "8060d2e120",
+      "expected": "疲惫",
+      "predicted": "疲惫",
+      "analysis_source": "llm",
+      "reason": "全天高效运转后身体先停下，肩紧眼酸、嫌音乐吵，明确意识到积极背后是害怕看见疲惫；结尾想减量休息，主导为疲惫，夹杂短暂开心与内疚轻松。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "听你说完，感觉你今天一直在用力撑着，那种“完成一件就短暂开心”的节奏，其实挺耗人的。身体先停下来，可能是在替你承认：今天真的已经够多了。你把周末的邀约改成下周再说，那种内疚和轻松同时出现，我觉得很真实——不是没照顾好别人，而是终于也把自己算进去了。明天只留一件最重要的事，这个想法本身就很温柔，你想先留哪一件？",
+      "llm_used": true,
+      "date": "2026-11-01"
+    },
+    {
+      "source_id": "synthetic-004",
+      "id": "2941239ccc",
+      "expected": "混合/说不清",
+      "predicted": "混合/说不清",
+      "analysis_source": "llm",
+      "reason": "生气、委屈、不安与冷静反思交织，情绪随时间缓和但未完全消解，用户自己也指出生气混着害怕被评价和累积压力，无单一主导情绪。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "下午那一下的生气和委屈都是真的，被那样提意见时，很难不先觉得整个人被否定了。后来你能重新看记录、分清对方说的其实是展示逻辑，还愿意发那条消息，这中间的分寸挺不容易的。现在等回复的那点不安，大概也还悬着吧。",
+      "llm_used": true,
+      "date": "2026-11-03"
+    },
+    {
+      "source_id": "synthetic-005",
+      "id": "0e941a7dd8",
+      "expected": "低落",
+      "predicted": "低落",
+      "analysis_source": "llm",
+      "reason": "期待活动取消带来失望，独坐发呆、难过源于想暂时离开日常；结尾虽接受并散步，但明确说心情未突然变好、期待落空仍难受，主导为低落而非平静。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "听你这么说，那种落空的感觉很真实——不只是活动没了，更像是等着的那个“暂时离开”的机会也一起被抽走了。你能在发呆之后慢慢注意到风和树影，没有逼自己把这一天填满，这份对自己的宽松挺不容易的。现在坐在河边的时候，心里更接近平静，还是仍有一点闷闷的？",
+      "llm_used": true,
+      "date": "2026-11-05"
+    },
+    {
+      "source_id": "synthetic-006",
+      "id": "e802438fce",
+      "expected": "平稳",
+      "predicted": "平稳",
+      "analysis_source": "llm",
+      "reason": "文本自述心情起伏很小，偶有轻微烦躁与轻满足，无显著主导情绪，并明确认同平稳本身是一种状态，整体偏向平稳。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "听你说完，觉得这一天像被轻轻收好的便签——有点累，也有热饮刚好对味的满足。你开始不把“平稳”当成空白，这本身挺珍贵的。那三件留给明天的事，现在看着是什么感觉？",
+      "llm_used": true,
+      "date": "2026-11-07"
+    },
+    {
+      "source_id": "synthetic-007",
+      "id": "f0c04c899a",
+      "expected": "开心",
+      "predicted": "开心",
+      "analysis_source": "llm",
+      "reason": "完成拖延任务、获同学肯定后笑、允许自己停下感受满足，整体是温和而明确的开心与释然，无显著负面情绪主导。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "听你这么说，能感觉到那种肩膀松下来、心里亮一点的满足，挺真实的。改完第一处后结构慢慢顺起来，加上同学那句反馈，确实值得笑一下。今天能允许自己停下来感受“做到了”，而不是马上赶下一件，这份看见本身就很珍贵。",
+      "llm_used": true,
+      "date": "2026-11-09"
+    },
+    {
+      "source_id": "synthetic-008",
+      "id": "8777cec092",
+      "expected": "平稳",
+      "predicted": "平稳",
+      "analysis_source": "llm",
+      "reason": "文本明确描述心情很轻、无激烈兴奋，是平稳的期待和对日常的喜欢；课堂未懂但未自责，朋友联系带来温和满足，整体主导为平稳而非开心或低落。",
+      "intent": "share",
+      "understanding_source": "llm",
+      "reply": "听你这样说，能感觉到一种很轻的踏实，期待和日常的喜欢都落在具体的小事里。课堂没听懂时没有责怪自己，只是记下来晚上再看，这种对自己的温和挺珍贵的。想多听听，晚上再看那几处时，你希望自己是什么状态？",
+      "llm_used": true,
+      "date": "2026-11-11"
+    }
+  ],
+  "page_errors": [],
+  "browser_reply": "听你说“今天展示完成了，我真的很开心”，我也跟着松快了一点。能先把这份开心停在当下，而不是立刻被下一件事拉走，挺难得的。"
+}

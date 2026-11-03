@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "width": 1363,
+      "height": 871,
+      "foldedByDefault": true,
+      "expandedTextFits": true
+    },
+    {
+      "width": 568,
+      "height": 871,
+      "foldedByDefault": true,
+      "expandedTextFits": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "foldedByDefault": true,
+      "expandedTextFits": true
+    }
+  ],
+  "errors": []
+}

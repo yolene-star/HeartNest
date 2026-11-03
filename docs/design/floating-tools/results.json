@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "checks": [
+    "floating drag/click distinction, header consistency, cross-page position",
+    "ordinary actions are silent, agent requests visible as user turns, original advice and chat retained",
+    "real touch gesture moves button without opening, tap opens drawer"
+  ],
+  "errors": []
+}

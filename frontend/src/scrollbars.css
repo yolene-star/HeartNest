@@ -1,0 +1,12 @@
+/* Include browser-native textarea and document scrollbars, not just panels. */
+html, body, body * {
+  scrollbar-width: thin !important;
+  scrollbar-color: transparent transparent !important;
+}
+html.is-scrolling, body.is-scrolling, body .is-scrolling {
+  scrollbar-color: #a1b48b transparent !important;
+}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb { background: transparent; border-radius: 6px; }
+.is-scrolling::-webkit-scrollbar-thumb { background: #a1b48b; }

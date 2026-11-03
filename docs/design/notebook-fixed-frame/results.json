@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "checks": [
+    "fixed cover/header/ring coordinates while paper scrolls",
+    "window does not scroll on desktop/tablet",
+    "navigation resets paper",
+    "quiet round trip",
+    "mobile document scrolling retained"
+  ],
+  "errors": []
+}

@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "preference-only basis, collapsed evidence, rejection stays in session without profile",
+    "music literature+preference link, discomfort stops, explicit avoidance appears in My and can be deleted; navigation preserves cards",
+    "cross-turn loss of control suppresses risky preference recommendations",
+    "risky coping not promoted, refusal adds no action, no diary save without permission",
+    "plain chat exercise request enters controlled library; discomfort text stops without a new action"
+  ],
+  "errors": [],
+  "passed": true
+}

@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "checks": [
+    "Agent speaks first; memory off uses generic nickname greeting without private content",
+    "Recent confirmed tired state; navigation and first reply retain exactly one opening; model context includes it",
+    "Existing conversation frozen; new session reflects mixed/latest moods; positive mobile opening fits",
+    "Opening service failure falls back to generic greeting and leaves composer usable",
+    "Late opening response cannot replace the opening after user starts chatting"
+  ],
+  "errors": []
+}

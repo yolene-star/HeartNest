@@ -1,0 +1,85 @@
+import { chromium } from '@playwright/test'
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
+const base = 'http://127.0.0.1:18080', out = '../docs/design/profile-proposals'
+await fs.mkdir(out, { recursive: true })
+async function api(path, method = 'GET', body) {
+  const r = await fetch(`${base}/api${path}`, { method, headers: {'Content-Type':'application/json'}, body: body === undefined ? undefined : JSON.stringify(body) })
+  assert(r.ok, `${path}: ${r.status}`); return r.json()
+}
+const original = await api('/settings'), initial = await api('/profile'), diaries = await api('/diaries')
+const browser = await chromium.launch({ channel:'msedge', headless:true })
+const errors = [], checks = []
+try {
+  await api('/settings', 'PATCH', { onboarding_complete:true, nickname:'原称呼' })
+  const page = await browser.newPage({ viewport:{width:1363,height:871} })
+  page.on('pageerror', e => errors.push(e.message))
+  await page.goto(base)
+  const send = async text => {
+    await page.locator('#chat-message').fill(text)
+    await page.getByRole('button',{name:'发送',exact:true}).click()
+    await page.waitForFunction(() => !document.querySelector('.typing-state'))
+  }
+  await send('从今天开始你要叫我小红')
+  let card = page.getByRole('region',{name:'个人资料更新确认'}).last()
+  // section with accessible name is a region.
+  await card.getByRole('button',{name:'确认更新'}).waitFor()
+  assert.equal((await api('/settings')).nickname, '原称呼')
+  await page.screenshot({path:`${out}/desktop-confirm.png`})
+  let failOnce = true
+  await page.route('**/api/profile/proposals/*/confirm', async route => {
+    if (failOnce) { failOnce = false; await route.fulfill({status:503,json:{detail:'test'}}) }
+    else await route.continue()
+  })
+  await card.getByRole('button',{name:'确认更新'}).click()
+  await card.getByRole('alert').waitFor()
+  assert.equal((await api('/settings')).nickname, '原称呼')
+  await card.getByRole('button',{name:'确认更新'}).click()
+  await card.getByText('已更新到「我的」').waitFor()
+  await page.locator('.welcome-strip h1').filter({hasText:'小红'}).waitFor()
+  assert.equal(await page.locator('.save-only-confirmation').count(),0,'profile operations should not add chat notices')
+  await page.getByRole('button',{name:'我的',exact:true}).click()
+  await page.getByRole('button',{name:'陪伴',exact:true}).click()
+  await card.getByText('已更新到「我的」').waitFor()
+  checks.push('nickname confirmation, failed save retry and immediate hero refresh')
+  await send('以后叫我小绿')
+  card = page.getByRole('region',{name:'个人资料更新确认'}).last()
+  await card.getByRole('button',{name:'暂不记录'}).click()
+  await card.getByText('这次不记录').waitFor()
+  assert.equal(await page.locator('.save-only-confirmation').count(),0)
+  assert.equal((await api('/settings')).nickname, '小红')
+  await send('我每天睡前会读十分钟书。')
+  card = page.getByRole('region',{name:'个人资料更新确认'}).last()
+  await card.getByRole('button',{name:'确认更新'}).click()
+  await card.getByText('已更新到「我的」').waitFor()
+  assert.deepEqual(await api('/diaries'),diaries)
+  const count = await page.locator('.profile-update-card').count()
+  await send('我每天睡前会读十分钟书。')
+  assert.equal(await page.locator('.profile-update-card').count(),count)
+  checks.push('dismiss without writing, separate habit consent in no-save chat, deduplication, no diary persistence')
+  await page.getByRole('button',{name:'我的',exact:true}).click()
+  assert.equal(await page.locator('#settings-nickname').inputValue(),'小红')
+  const notes = page.locator('.flexible-profile')
+  let row = notes.locator('.profile-setting-row').filter({hasText:'每天睡前会读十分钟书'})
+  await row.getByRole('button',{name:'编辑小事'}).click()
+  await notes.getByLabel('小事内容').fill('睡前阅读二十分钟')
+  await notes.getByRole('button',{name:'保存小事'}).click()
+  row = notes.locator('.profile-setting-row').filter({hasText:'睡前阅读二十分钟'})
+  await row.waitFor()
+  assert.equal(await page.locator('.profile-settings').getByText('睡前阅读二十分钟').count(),0)
+  await page.screenshot({path:`${out}/desktop-profile.png`})
+  await page.setViewportSize({width:390,height:871})
+  await row.scrollIntoViewIfNeeded()
+  await page.screenshot({path:`${out}/mobile-profile.png`})
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))
+  await row.getByRole('button',{name:'删除小事'}).click()
+  await row.waitFor({state:'detached'})
+  checks.push('my page nickname, separate flexible notes, edit/delete, mobile overflow')
+  assert.deepEqual(errors,[])
+  await fs.writeFile(`${out}/results.json`, JSON.stringify({passed:true,checks,errors},null,2))
+  console.log('PASS', checks)
+} finally {
+  for (const p of (await api('/profile')).items) if (!initial.items.some(x=>x.id===p.id)) await api(`/profile/${p.id}`,'DELETE')
+  await api('/settings','PATCH',original)
+  await browser.close()
+}

@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "pets": 5,
+  "checks": [
+    "static hero pixel comparison",
+    "empty pet removed",
+    "only dock animates",
+    "thinking keeps hero still",
+    "static message/nav/picker avatars",
+    "dock draggable",
+    "single lake companion",
+    "no diary changes"
+  ],
+  "errors": []
+}

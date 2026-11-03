@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "checks": [
+    "nickname confirmation, failed save retry and immediate hero refresh",
+    "dismiss without writing, separate habit consent in no-save chat, deduplication, no diary persistence",
+    "my page nickname, separate flexible notes, edit/delete, mobile overflow"
+  ],
+  "errors": []
+}

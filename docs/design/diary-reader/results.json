@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checks": [
+    "standalone paper reader at 390/781/1363",
+    "actual text with line breaks preserved",
+    "back restores previous month and selected date",
+    "edit and addendum persist",
+    "skipped mood not falsely confirmed",
+    "delete cancellation retains record"
+  ],
+  "errors": []
+}

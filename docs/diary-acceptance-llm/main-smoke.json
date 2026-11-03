@@ -1,0 +1,22 @@
+{
+  "llm_used": true,
+  "health_before": {
+    "status": "ok",
+    "diaries": 13,
+    "profiles": 2
+  },
+  "reply": "听你说完成展示后很开心，我也跟着松快了一点。那种一直惦记着“下一件”的紧绷，今天能先放一放，挺不容易的。展示里有没有哪个瞬间，让你觉得特别值得？",
+  "health_after": {
+    "status": "ok",
+    "diaries": 13,
+    "profiles": 2
+  },
+  "understanding_source": "llm",
+  "intent": "share",
+  "analysis": {
+    "label": "低落",
+    "confidence": 0.9,
+    "analysis_source": "llm",
+    "reason": "明确否定开心，期待活动取消导致失落，主导情绪为低落。"
+  }
+}

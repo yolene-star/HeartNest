@@ -1,0 +1,60 @@
+{
+  "review_date": "2026-11-02",
+  "review_basis": "用户明确确认 synthetic-008 应标为平稳",
+  "label_change": {
+    "id": "synthetic-008",
+    "previous": "积极",
+    "approved": "平稳"
+  },
+  "method": "对已保存的真实模型输出重新核对；未重新调用模型或重跑浏览器测试",
+  "samples": [
+    {
+      "id": "synthetic-001",
+      "approved_label": "焦虑",
+      "saved_model_label": "焦虑",
+      "matches": true
+    },
+    {
+      "id": "synthetic-002",
+      "approved_label": "低落",
+      "saved_model_label": "低落",
+      "matches": true
+    },
+    {
+      "id": "synthetic-003",
+      "approved_label": "疲惫",
+      "saved_model_label": "疲惫",
+      "matches": true
+    },
+    {
+      "id": "synthetic-004",
+      "approved_label": "混合/说不清",
+      "saved_model_label": "混合/说不清",
+      "matches": true
+    },
+    {
+      "id": "synthetic-005",
+      "approved_label": "低落",
+      "saved_model_label": "低落",
+      "matches": true
+    },
+    {
+      "id": "synthetic-006",
+      "approved_label": "平稳",
+      "saved_model_label": "平稳",
+      "matches": true
+    },
+    {
+      "id": "synthetic-007",
+      "approved_label": "开心",
+      "saved_model_label": "开心",
+      "matches": true
+    },
+    {
+      "id": "synthetic-008",
+      "approved_label": "平稳",
+      "saved_model_label": "平稳",
+      "matches": true
+    }
+  ]
+}

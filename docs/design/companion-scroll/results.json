@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checks": [
+    "independent actual wheel scrolling",
+    "no scroll chaining at bottom",
+    "composer visible",
+    "871 and 650 tall desktops",
+    "narrow layouts prioritize chat without outer scrolling",
+    "default data unchanged"
+  ],
+  "errors": []
+}

@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "today": "2026-11-03",
+  "timeZone": "Asia/Shanghai",
+  "checks": [
+    "future and malformed creation returns 422",
+    "today and yesterday accepted",
+    "future patch rejected without partial text update",
+    "future calendar cells disabled at desktop/mobile",
+    "future month cannot start diary from detail"
+  ],
+  "errors": []
+}

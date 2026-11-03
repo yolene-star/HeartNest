@@ -1,0 +1,65 @@
+{
+  "date": "2026-11-03",
+  "issues": [
+    3,
+    9,
+    12,
+    13
+  ],
+  "status": "technical_verification_passed_human_gates_pending",
+  "backend": {
+    "passed": 174,
+    "warnings": 1,
+    "network": "none",
+    "database": "temporary"
+  },
+  "privacy_browser": {
+    "passed": true,
+    "widths": [
+      1363,
+      568,
+      390
+    ]
+  },
+  "human_acceptance": {
+    "22": "pending",
+    "23": "pending",
+    "24": "pending"
+  },
+  "live_llm_called": false,
+  "personal_database_mutated": false,
+  "documentation_audit": {
+    "passed": true,
+    "models": 14,
+    "relative_links": 42,
+    "dataset_metrics_reproduced": true
+  },
+  "browser_suites": {
+    "core": "all five passed",
+    "quiet_scenarios": 5,
+    "relaxation_scenarios": 6,
+    "conversation_continuity": 5,
+    "public_demo_local": "passed"
+  },
+  "build": "Vite and Docker passed",
+  "screenshots_reviewed": [
+    "privacy-disclosure/1363-expanded.png",
+    "privacy-disclosure/390-expanded.png"
+  ],
+  "issue_13_final_acceptance": "pending #22 #23 #24",
+  "source_submission": "Prepared as functional commits for the repository pull request; issue snapshots remain available",
+  "initial_failures": [
+    "public classification historical output permission denied; rerun in temporary directory passed",
+    "relaxation-flow expected retired confirmation wording; replaced with old/new card assertions and rerun passed"
+  ],
+  "github_readback_verified": true,
+  "github_states": {
+    "3": "closed",
+    "9": "closed",
+    "12": "closed",
+    "13": "open"
+  },
+  "local_8080_privacy_read_only_smoke": "passed",
+  "latest_document_links_checked": 44,
+  "review_fix": "Cross-turn risky preferences now constrain advice; regression reproduced before fix and passed afterward"
+}

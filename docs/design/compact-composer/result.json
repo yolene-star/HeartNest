@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "measurements": [
+    {
+      "width": 1363,
+      "height": 871,
+      "composerHeight": 98
+    },
+    {
+      "width": 793,
+      "height": 871,
+      "composerHeight": 98
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "composerHeight": 98
+    },
+    {
+      "width": 320,
+      "height": 640,
+      "composerHeight": 98
+    }
+  ],
+  "errors": []
+}

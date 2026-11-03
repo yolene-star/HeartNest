@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "widths": [
+    390,
+    785,
+    1440
+  ],
+  "checks": [
+    "compact default",
+    "keyboard disclosure",
+    "confirm/edit/skip/reselect",
+    "shared lake chat",
+    "no persistent changes"
+  ],
+  "errors": []
+}
