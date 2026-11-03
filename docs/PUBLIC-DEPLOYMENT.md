@@ -6,6 +6,8 @@
 
 https://capacity-closely-restricted-operation.trycloudflare.com
 
+2026-11-03 本轮已同步有依据的放松建议、首页个性化主动开场与 98px 紧凑输入区。复用现有隧道后，真实 HTTPS 浏览器回归再次通过：新访客引导、称呼确认、日记新增/删除、双访客隔离、手机布局、会话留底与 Secure Cookie，页面无 JavaScript 错误。桌面/手机截图已重新打开检查，结果见 `docs/design/public-demo/https-results.json`。最近后端完整回归为 173 项通过；下文 97 项为首次公网部署时的历史记录。本轮未开启公网大模型。
+
 这是本机 Docker 经 Cloudflare Quick Tunnel 提供的完整前后端演示。电脑、Docker Desktop、网络及隧道进程必须保持在线；重启隧道通常会生成新地址，没有固定域名和持续可用保证。正式长期托管仍需云服务器或支持 Docker 与持久磁盘的托管账户。本次未创建付费云资源。
 
 ## 演示模式的边界

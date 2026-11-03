@@ -1,5 +1,9 @@
 # 公网演示验证记录
 
+## 最新更新
+
+2026-11-03：最新界面（有依据的建议、主动开场、98px 输入区）已运行于原 HTTPS 地址，本轮 `public-demo.mjs` 再次真实通过，无聊天 mock、无页面脚本错误。`https-results.json` 与 HTTPS 桌面/手机截图已更新并打开检查。后端最近完整回归 173 项通过；下列 97 项为首次上线的历史基线。公网仍为独立数据和本地规则模式，临时隧道依赖电脑、Docker 与网络持续在线。
+
 2026-11-03，独立 Docker `18081` 及 Cloudflare 实际 HTTPS 地址均通过浏览器回环，未使用聊天接口 mock。使用的内容均为虚构数据。
 
 可复跑脚本：`frontend/tests/public-demo.mjs`，公网模式设置环境变量 `PUBLIC_DEMO_URL`。

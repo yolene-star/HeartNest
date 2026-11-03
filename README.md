@@ -11,6 +11,8 @@ docker compose up --build -d
 打开 http://localhost:8080 ，接口文档 http://localhost:8080/docs 。
 环境封装、数据保存和检查命令见 [Docker 说明](docs/DOCKER.md)。本轮实现、验证结果及尚未通过的项目见 [补齐验收记录](docs/completion-validation/README.md)。
 
+当前统一说明：[数据来源与字段字典](docs/data/README.md)、[隐私、云端处理与删除边界](docs/PRIVACY.md)、[场景验证索引](docs/validation/README.md)。旧验证报告按其日期保留，不能代替本轮复跑或用户人工验收。
+
 ## 启动后端
 
 ```powershell
