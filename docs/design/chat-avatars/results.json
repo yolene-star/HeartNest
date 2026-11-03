@@ -1,0 +1,153 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "width": 390,
+      "quiet": false,
+      "states": [
+        "greeting",
+        "pending",
+        "reply",
+        "safety",
+        "memory",
+        "advice",
+        "failure",
+        "retry"
+      ]
+    },
+    {
+      "width": 390,
+      "quiet": true,
+      "states": [
+        "greeting",
+        "pending",
+        "reply",
+        "safety",
+        "memory",
+        "advice",
+        "failure",
+        "retry"
+      ]
+    },
+    {
+      "width": 320,
+      "quiet": false,
+      "states": [
+        "greeting",
+        "pending",
+        "reply",
+        "safety",
+        "memory",
+        "advice",
+        "failure",
+        "retry"
+      ]
+    },
+    {
+      "width": 320,
+      "quiet": true,
+      "states": [
+        "greeting",
+        "pending",
+        "reply",
+        "safety",
+        "memory",
+        "advice",
+        "failure",
+        "retry"
+      ]
+    },
+    {
+      "width": 568,
+      "quiet": false,
+      "states": [
+        "greeting",
+        "pending",
+        "reply",
+        "safety",
+        "memory",
+        "advice",
+        "failure",
+        "retry"
+      ]
+    },
+    {
+      "width": 568,
+      "quiet": true,
+      "states": [
+        "greeting",
+        "pending",
+        "reply",
+        "safety",
+        "memory",
+        "advice",
+        "failure",
+        "retry"
+      ]
+    },
+    {
+      "width": 793,
+      "quiet": false,
+      "states": [
+        "greeting",
+        "pending",
+        "reply",
+        "safety",
+        "memory",
+        "advice",
+        "failure",
+        "retry"
+      ]
+    },
+    {
+      "width": 793,
+      "quiet": true,
+      "states": [
+        "greeting",
+        "pending",
+        "reply",
+        "safety",
+        "memory",
+        "advice",
+        "failure",
+        "retry"
+      ]
+    },
+    {
+      "width": 1363,
+      "quiet": false,
+      "states": [
+        "greeting",
+        "pending",
+        "reply",
+        "safety",
+        "memory",
+        "advice",
+        "failure",
+        "retry"
+      ]
+    },
+    {
+      "width": 1363,
+      "quiet": true,
+      "states": [
+        "greeting",
+        "pending",
+        "reply",
+        "safety",
+        "memory",
+        "advice",
+        "failure",
+        "retry"
+      ]
+    }
+  ],
+  "pets": 6,
+  "errors": [],
+  "synthetic_response_branches": [
+    "safety",
+    "memory",
+    "advice",
+    "failure"
+  ]
+}
