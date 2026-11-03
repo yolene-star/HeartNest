@@ -4,6 +4,8 @@ import './product.css'
 import './interaction.css'
 import './nature.css'
 import './notebook.css'
+import './scrollbars.css'
+import { installScrollbars } from './scrollbars.js'
 import { NatureIcon, NatureCalendar, MoodFace, normalizeEmotion } from './NatureUI.jsx'
 import QuietScene from './QuietScene.jsx'
 import RelaxationChoice from './RelaxationChoice.jsx'
@@ -35,6 +37,7 @@ const json = (method, body) => ({ method, body: JSON.stringify(body) })
 const dateLabel = value => new Date(value).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
 
 function ProductApp() {
+  useEffect(() => installScrollbars(), [])
   const [page, setPage] = useState('陪伴')
   const [quiet, setQuiet] = useState(false)
   const [diaryView, setDiaryView] = useState('calendar')
