@@ -1,10 +1,16 @@
 # 心栖公网演示
 
+## 当前访问状态
+
+2026年11月3日 README 更新时，临时地址复查出现 TLS 连接中断，不能据下方历史验收认定当前仍然可用。请优先使用本地 Docker 演示；重新建立隧道后需要更新链接并复验。
+
 ## 当前地址
 
 2026-11-03 验证的临时 HTTPS 地址：
 
-https://capacity-closely-restricted-operation.trycloudflare.com
+https://published-set-surprise-brochures.trycloudflare.com
+
+2026-11-03 链接故障复查：旧地址 `capacity-closely-restricted-operation.trycloudflare.com` 对应的隧道持续返回 `Unauthorized: Tunnel not found`，本地隔离 Docker 服务仍健康。已保留容器和数据卷，停止失效隧道后重建为上面的新地址；公网健康检查返回 200，真实 HTTPS 浏览器回归再次通过。隧道进程仍在运行不代表公网地址可用；遇到同类故障，可先执行 `./scripts/stop-public-demo.ps1 -KeepDocker`，再执行 `./scripts/start-public-demo.ps1 -NoBuild`，并验证新地址。旧地址不能继续使用。
 
 2026-11-03 本轮已同步有依据的放松建议、首页个性化主动开场与 98px 紧凑输入区。复用现有隧道后，真实 HTTPS 浏览器回归再次通过：新访客引导、称呼确认、日记新增/删除、双访客隔离、手机布局、会话留底与 Secure Cookie，页面无 JavaScript 错误。桌面/手机截图已重新打开检查，结果见 `docs/design/public-demo/https-results.json`。最近后端完整回归为 173 项通过；下文 97 项为首次公网部署时的历史记录。本轮未开启公网大模型。
 

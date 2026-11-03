@@ -36,7 +36,7 @@ docker compose stop
 
 ## Git
 
-远程仓库： https://github.com/yolene-star/HeartNest （私有）。依赖、缓存、个人运行数据、数据库与环境变量文件均由 `.gitignore` 排除。
+远程仓库： https://github.com/yolene-star/HeartNest （公开）。依赖、缓存、个人运行数据、数据库与环境变量文件均由 `.gitignore` 排除。
 
 ## 本地源码待审包
 
