@@ -1,20 +1,16 @@
 # 心栖公网演示
 
-## 当前访问状态
+## 当前启动方式与地址
 
-2026年11月3日 README 更新时，临时地址复查出现 TLS 连接中断，不能据下方历史验收认定当前仍然可用。请优先使用本地 Docker 演示；重新建立隧道后需要更新链接并复验。
+Windows 双击仓库根目录的 `启动心栖.cmd`，或运行 `./Start-HeartNest.ps1`。本地 Docker 网页与公网隧道一起启动，只有公网 `/api/health` 返回隔离演示状态且首页加载成功才显示启动成功。镜像已有且源码未改时可加 `-NoBuild`。
 
-## 当前地址
+2026年11月3日启动脚本检查通过的新地址：
 
-2026-11-03 验证的临时 HTTPS 地址：
+https://exam-lit-firmware-hampton.trycloudflare.com
 
-https://published-set-surprise-brochures.trycloudflare.com
+之前的临时地址已不可用。最新实际地址以启动输出或 `.deps/public-demo/current-url.txt` 为准。其他设备直接输入此网址访问，不需要安装本项目。本机、Docker、网络及隧道必须持续在线。
 
-2026-11-03 链接故障复查：旧地址 `capacity-closely-restricted-operation.trycloudflare.com` 对应的隧道持续返回 `Unauthorized: Tunnel not found`，本地隔离 Docker 服务仍健康。已保留容器和数据卷，停止失效隧道后重建为上面的新地址；公网健康检查返回 200，真实 HTTPS 浏览器回归再次通过。隧道进程仍在运行不代表公网地址可用；遇到同类故障，可先执行 `./scripts/stop-public-demo.ps1 -KeepDocker`，再执行 `./scripts/start-public-demo.ps1 -NoBuild`，并验证新地址。旧地址不能继续使用。
-
-2026-11-03 本轮已同步有依据的放松建议、首页个性化主动开场与 98px 紧凑输入区。复用现有隧道后，真实 HTTPS 浏览器回归再次通过：新访客引导、称呼确认、日记新增/删除、双访客隔离、手机布局、会话留底与 Secure Cookie，页面无 JavaScript 错误。桌面/手机截图已重新打开检查，结果见 `docs/design/public-demo/https-results.json`。最近后端完整回归为 173 项通过；下文 97 项为首次公网部署时的历史记录。本轮未开启公网大模型。
-
-这是本机 Docker 经 Cloudflare Quick Tunnel 提供的完整前后端演示。电脑、Docker Desktop、网络及隧道进程必须保持在线；重启隧道通常会生成新地址，没有固定域名和持续可用保证。正式长期托管仍需云服务器或支持 Docker 与持久磁盘的托管账户。本次未创建付费云资源。
+重复启动时检查进程身份、网页和API健康，可用则复用，不可用则停止匹配的旧进程后重建。新地址未通过检查时会报错，保留本地18081可用，不会将分配地址误报成部署成功。临时隧道重建可能更换网址，固定网址需要自有域名与固定隧道配置，当前未配置。
 
 ## 演示模式的边界
 
@@ -44,7 +40,7 @@ docker compose --env-file NUL -f compose.public.yaml ps
 ./scripts/stop-public-demo.ps1
 ```
 
-脚本将进程标识和日志保存在被忽略的 `.deps/public-demo/`。隧道在后台隐藏运行；重复启动会复用仍运行的进程。停止前检查进程名称及 UTC 启动时间 ticks，兼容旧时间字符串记录，避免误杀复用相同 PID 的其它进程。获得 URL 只代表已分配地址，仍需健康检查与实际浏览器验证。
+脚本将进程标识和日志保存在被忽略的 `.deps/public-demo/`。隧道在后台隐藏运行；重复启动仅复用公网网页与 API 均可访问的进程。停止前检查进程名称及 UTC 启动时间 ticks，兼容旧时间字符串记录，避免误杀复用相同 PID 的其它进程。脚本内置公网网页与 API 健康检查，仍需在改动后执行真实浏览器回归。
 
 从零构建需要联网下载基础镜像和依赖。此次本机已具备缓存 Python 后端镜像，后端通过 `FROM emotion-companion-backend:latest` 加 `COPY backend /app/backend` 增量构建，未执行断网环境下的全新基础镜像拉取；前端走标准 Compose 构建。仓库的 `compose.public.yaml` 使用完整 Dockerfile，供其它环境正常从零构建。
 

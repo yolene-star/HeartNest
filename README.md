@@ -6,7 +6,7 @@
 
 ## 体验入口
 
-- **临时在线 Demo**：[打开心栖](https://published-set-surprise-brochures.trycloudflare.com)（临时地址，2026年11月3日本轮复查连接中断，请优先使用本地启动）。免注册，浏览器访客数据隔离，默认关闭云端模型，使用本地规则回应。
+- **临时在线 Demo**：[打开心栖](https://exam-lit-firmware-hampton.trycloudflare.com)（2026年11月3日启动脚本已验证网页与 API）。免注册，浏览器访客数据隔离，默认关闭云端模型，使用本地规则回应。
 - **本地访问**：[http://localhost:8080](http://localhost:8080)，启动方法见下文。
 - **接口文档**：[http://localhost:8080/docs](http://localhost:8080/docs)。
 
@@ -26,6 +26,22 @@
 | 安静陪伴 | 手绘湖景与当前伙伴，不要求打卡或完成任务，声音默认关闭 |
 
 聊天始终会回应，**是否保存是独立选择**。临时聊天跨栏目切换保留，刷新或关闭页面后的恢复尚未实现。项目用于日常陪伴、自我回顾和活动选择辅助，不承担心理诊断或治疗。
+
+## 一键启动本地网页与公网访问
+
+安装并启动 Docker Desktop，安装 cloudflared 后，在 Windows 双击根目录的 **启动心栖.cmd**，或执行：
+
+```powershell
+./Start-HeartNest.ps1
+# 镜像已有且源码未变时可跳过构建
+./Start-HeartNest.ps1 -NoBuild
+```
+
+脚本会启动独立的本地演示（18081），建立公网隧道，验证公网网页和 API 后显示网址。把输出的网址发给其他人，他们直接用浏览器访问即可。重复启动会验证旧地址，可用时复用，失效时重建。当前网址同时保存于 `.deps/public-demo/current-url.txt`。
+
+公网演示与个人使用的8080数据隔离。请保持本机联网及 Docker、隧道在线；临时隧道重建后网址可能变化。若要求重启后网址始终不变，还需配置自有域名和固定隧道。只运行普通 `docker compose up` 不会建立公网入口。
+
+停止公网与本地演示：`./scripts/stop-public-demo.ps1`。仅关闭公网、保留本地：`./scripts/stop-public-demo.ps1 -KeepDocker`。
 
 ## Docker 快速启动
 

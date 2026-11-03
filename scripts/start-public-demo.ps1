@@ -1,9 +1,24 @@
-param([switch]$NoBuild, [switch]$LocalOnly)
+﻿param([switch]$NoBuild, [switch]$LocalOnly)
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $runtimeDir = Join-Path $repoRoot '.deps/public-demo'
 $stateFile = Join-Path $runtimeDir 'tunnel.json'
 New-Item -ItemType Directory -Path $runtimeDir -Force | Out-Null
+function Test-PublicDemo([string]$Url) {
+    try {
+        $health = Invoke-RestMethod ($Url.TrimEnd('/') + '/api/health') -TimeoutSec 5
+        if ($health.status -ne 'ok' -or $health.public_demo -ne $true) { return $false }
+        $page = Invoke-WebRequest $Url -UseBasicParsing -TimeoutSec 5
+        return $page.StatusCode -eq 200 -and $page.Content -match 'id="root"'
+    } catch { return $false }
+}
+function Show-PublicDemo([string]$Url) {
+    $Url | Set-Content -LiteralPath (Join-Path $runtimeDir 'current-url.txt') -Encoding utf8
+    Write-Output "本地网页：http://127.0.0.1:18081"
+    Write-Output "公网访问：$Url"
+    Write-Output '公网网页与 API 健康检查已通过。其他设备可直接访问以上公网地址。'
+    Write-Output '请保持此电脑、Docker 和隧道在线；临时地址重建后可能变化。'
+}
 Push-Location $repoRoot
 try {
     $composeArgs = @('compose', '--env-file', 'NUL', '-f', 'compose.public.yaml', 'up', '-d')
@@ -25,10 +40,17 @@ try {
         $existing = Get-Process -Id $previous.pid -ErrorAction SilentlyContinue
         $expectedTicks = if ($previous.startedAtTicks) { [long]$previous.startedAtTicks } else { ([datetime]$previous.startedAt).ToUniversalTime().Ticks }
         if ($existing -and $existing.ProcessName -eq 'cloudflared' -and $existing.StartTime.ToUniversalTime().Ticks -eq $expectedTicks) {
-            Write-Output $previous.url
-            return
+            if (Test-PublicDemo $previous.url) {
+                Show-PublicDemo $previous.url
+                return
+            }
+            Write-Output '旧隧道进程仍在，但公网检查失败，正在重新建立入口。'
+            Stop-Process -Id $existing.Id
         }
+        Remove-Item -LiteralPath $stateFile
     }
+    # Do not leave an obsolete address displayed as the current successful entry.
+    Remove-Item -LiteralPath (Join-Path $runtimeDir 'current-url.txt') -ErrorAction SilentlyContinue
     $cloudflared = Get-Command cloudflared -ErrorAction SilentlyContinue
     $binary = if ($cloudflared) { $cloudflared.Source } else { 'C:\Program Files (x86)\cloudflared\cloudflared.exe' }
     if (-not (Test-Path -LiteralPath $binary)) { throw '请先安装 cloudflared，Docker 本地演示已运行于 18081' }
@@ -41,11 +63,22 @@ try {
         $logs = (Get-Content -LiteralPath $stdout -Raw -ErrorAction SilentlyContinue) + (Get-Content -LiteralPath $stderr -Raw -ErrorAction SilentlyContinue)
         $match = [regex]::Match($logs, 'https://[a-z0-9-]+\.trycloudflare\.com')
         if ($match.Success) {
-            $state = @{ pid=$process.Id; startedAtTicks=$process.StartTime.ToUniversalTime().Ticks; url=$match.Value }
+            $state = @{ pid=$process.Id; startedAtTicks=$process.StartTime.ToUniversalTime().Ticks; url=$match.Value; verified=$false }
             $state | ConvertTo-Json | Set-Content -LiteralPath $stateFile -Encoding utf8
-            Write-Output $match.Value
-            Write-Output '临时链接：需要此电脑、Docker 和隧道进程持续在线。请再运行公网浏览器验证。'
-            return
+            Write-Output "地址已分配，正在验证公网网页和 API：$($match.Value)"
+            for ($check = 0; $check -lt 12; $check++) {
+                if (Test-PublicDemo $match.Value) {
+                    $state.verified=$true
+                    $state | ConvertTo-Json | Set-Content -LiteralPath $stateFile -Encoding utf8
+                    Show-PublicDemo $match.Value
+                    return
+                }
+                if ($process.HasExited) { break }
+                Start-Sleep -Milliseconds 500
+            }
+            if (-not $process.HasExited) { Stop-Process -Id $process.Id }
+            Remove-Item -LiteralPath $stateFile -ErrorAction SilentlyContinue
+            throw "公网入口未通过健康检查，未标记启动成功。本地 http://127.0.0.1:18081 仍可使用。日志：$stderr"
         }
         if ($process.HasExited) { break }
     }

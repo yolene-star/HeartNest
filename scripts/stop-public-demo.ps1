@@ -1,7 +1,8 @@
-param([switch]$KeepDocker)
+﻿param([switch]$KeepDocker)
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $stateFile = Join-Path $repoRoot '.deps/public-demo/tunnel.json'
+Remove-Item -LiteralPath (Join-Path $repoRoot '.deps/public-demo/current-url.txt') -ErrorAction SilentlyContinue
 if (Test-Path -LiteralPath $stateFile) {
     $state = Get-Content -LiteralPath $stateFile -Raw | ConvertFrom-Json
     $process = Get-Process -Id $state.pid -ErrorAction SilentlyContinue
