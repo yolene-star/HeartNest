@@ -134,6 +134,7 @@ class DiaryIn(BaseModel):
         return validate_diary_date(value)
 
 class DiaryPatch(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
     text: str | None = Field(default=None, min_length=1)
     allow_retrieval: bool | None = None
     recorded_at: str | None = None
@@ -144,6 +145,7 @@ class DiaryPatch(BaseModel):
         return validate_diary_date(value)
 
 class DiaryAddendumIn(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
     text: str = Field(min_length=1)
 
 class ProfileIn(BaseModel):
